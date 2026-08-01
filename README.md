@@ -1,2 +1,2 @@
-# luciana-biochemistry-project
- Project for my girlfriend
+# biochemistry-project
+ Project for fun
