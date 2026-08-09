@@ -3,85 +3,98 @@ import Link from "next/link";
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
-      {/* Saludo y Encabezado */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-          ¡Hola! 👋
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
+      
+      {/* Saludo */}
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
+          Panel de Laboratorio
         </h1>
-        <p className="mt-1 text-slate-500">
-          Bienvenida a tu panel de control. ¿Qué necesitas hacer hoy?
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          Selecciona un módulo para comenzar a trabajar.
         </p>
-      </div>
+      </header>
 
-      {/* Grid de Módulos (Se apilan en celular, 3 columnas en PC) */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* Grid de Módulos */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+        
         {/* Módulo 1: ChemCalc */}
-        <Link href="/dashboard/calculadora" className="block transition-transform active:scale-95">
-          <Card className="h-full border-slate-200 hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span className="text-2xl">⚖️</span>
-                ChemCalc
+        <Link href="/dashboard/calculadora" className="block transition-transform active:scale-[0.98]">
+          <Card className="h-full rounded-lg border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-emerald-600 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <span>⚖️</span> ChemCalc
               </CardTitle>
-              <CardDescription>Herramientas de laboratorio</CardDescription>
+              <CardDescription className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-500">
+                Herramientas
+              </CardDescription>
             </CardHeader>
-            <CardContent className="text-sm text-slate-500">
-              Preparación rápida de soluciones, diluciones exactas y conversión de unidades al instante.
+            <CardContent>
+              <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                Calculadora de soluciones, diluciones y conversión rápida de unidades volumétricas.
+              </p>
             </CardContent>
           </Card>
         </Link>
 
         {/* Módulo 2: BioTrack */}
-        <Link href="/dashboard/academico" className="block transition-transform active:scale-95">
-          <Card className="h-full border-slate-200 hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span className="text-2xl">📚</span>
-                BioTrack
+        <Link href="/dashboard/academico" className="block transition-transform active:scale-[0.98]">
+          <Card className="h-full rounded-lg border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-emerald-600 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <span>📚</span> BioTrack
               </CardTitle>
-              <CardDescription>Gestión académica</CardDescription>
+              <CardDescription className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-500">
+                Gestión
+              </CardDescription>
             </CardHeader>
-            <CardContent className="text-sm text-slate-500">
-              Control de estado de materias, correlativas y bitácora de Trabajos Prácticos (TPs).
+            <CardContent>
+              <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                Agenda de Trabajos Prácticos (TPs), fechas de entrega.
+              </p>
             </CardContent>
           </Card>
         </Link>
 
         {/* Módulo 3: BioFlash */}
-        <Link href="/dashboard/flashcards" className="block transition-transform active:scale-95">
-          <Card className="h-full border-slate-200 hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span className="text-2xl">🧠</span>
-                BioFlash
+        <Link href="/dashboard/flashcards" className="block transition-transform active:scale-[0.98]">
+          <Card className="h-full rounded-lg border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-emerald-600 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <span>🧠</span> BioFlash
               </CardTitle>
-              <CardDescription>Repaso espaciado</CardDescription>
+              <CardDescription className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-500">
+                Estudio
+              </CardDescription>
             </CardHeader>
-            <CardContent className="text-sm text-slate-500">
-              Tarjetas de estudio interactivas para vías metabólicas, estructuras químicas y farmacología.
+            <CardContent>
+              <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                Tarjetas interactivas espaciadas para memorizar vías metabólicas y farmacología.
+              </p>
             </CardContent>
           </Card>
         </Link>
+
       </div>
 
-      {/* Sección de recordatorios o widgets rápidos */}
-      <div className="mt-8">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-50">
-          Próximos Parciales y Entregas de TPs
+      {/* Widget de Vencimientos (Nivel 1 de elevación) */}
+      <section className="mt-8 pt-4">
+        <h2 className="mb-4 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+          Próximos Vencimientos
         </h2>
-        <Card className="border-slate-200 shadow-sm dark:border-slate-800">
-          <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-            <span className="text-4xl mb-3">✅</span>
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              No hay entregas pendientes para esta semana.
+        <Card className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <CardContent className="flex flex-col items-center justify-center p-10 text-center">
+            <span className="mb-3 text-3xl opacity-80">✅</span>
+            <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+              No hay tareas pendientes.
             </p>
-            <p className="text-xs text-slate-500 mt-1">
-              ¡Excelente trabajo! Tienes todo al día.
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Tu bitácora está al día.
             </p>
           </CardContent>
         </Card>
-      </div>
+      </section>
+      
     </div>
   );
 }

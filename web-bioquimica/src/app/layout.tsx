@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from "next";
+// 1. Importamos Geist desde next/font/google
+import { Geist } from "next/font/google";
 import { ThemeProvider } from "@/core/components/theme-provider";
 import "./globals.css";
+
+// 2. Configuramos la fuente y su variable CSS
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "BioTools | Suite para Bioquímica",
@@ -29,7 +37,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    // 3. Inyectamos la variable de la fuente en el HTML
+    <html lang="es" className={`${geistSans.variable}`} suppressHydrationWarning>
       <body className="antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
         <ThemeProvider
           attribute="class"
