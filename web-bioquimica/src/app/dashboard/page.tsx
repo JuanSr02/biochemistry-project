@@ -8,7 +8,7 @@ export default function DashboardPage() {
       {/* Saludo */}
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
-          Panel de Laboratorio
+          Panel de Bioquímica
         </h1>
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
           Selecciona un módulo para comenzar a trabajar.
@@ -69,7 +69,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                Tarjetas interactivas espaciadas para memorizar vías metabólicas y farmacología.
+                Tarjetas interactivas espaciadas para estudiar.
               </p>
             </CardContent>
           </Card>
@@ -80,7 +80,7 @@ export default function DashboardPage() {
       {/* Widget de Vencimientos (Nivel 1 de elevación) */}
       <section className="mt-8 pt-4">
         <h2 className="mb-4 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-          Próximos Vencimientos
+          Próximas entregas
         </h2>
         <Card className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <CardContent className="flex flex-col items-center justify-center p-10 text-center">
@@ -89,7 +89,7 @@ export default function DashboardPage() {
               No hay tareas pendientes.
             </p>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Tu bitácora está al día.
+              Tu calendario está al día.
             </p>
           </CardContent>
         </Card>
