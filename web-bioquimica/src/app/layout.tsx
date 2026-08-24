@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 // 1. Importamos Geist desde next/font/google
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "@/core/components/theme-provider";
+import { InstallPrompt } from "@/core/components/install-prompt";
 import "./globals.css";
 
 // 2. Configuramos la fuente y su variable CSS
@@ -47,6 +48,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <InstallPrompt />
         </ThemeProvider>
       </body>
     </html>
