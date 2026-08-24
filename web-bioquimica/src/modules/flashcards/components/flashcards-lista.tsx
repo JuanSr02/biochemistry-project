@@ -11,9 +11,11 @@ import { Plus, Edit2, Trash2, X, Check, Save } from "lucide-react";
 
 export function FlashcardsLista({ 
   tarjetas, 
+  materias,
   onUpdate 
 }: { 
   tarjetas: TarjetaEstudio[], 
+  materias: import("@/modules/academico/types").Materia[],
   onUpdate: () => void 
 }) {
   const [creando, setCreando] = useState(false);
@@ -22,11 +24,12 @@ export function FlashcardsLista({
     categoria: "",
     pregunta: "",
     respuesta: "",
-    nivel_dificultad: "media"
+    nivel_dificultad: "media",
+    materia_id: materias[0]?.id
   });
 
   const resetForm = () => {
-    setForm({ categoria: "", pregunta: "", respuesta: "", nivel_dificultad: "media" });
+    setForm({ categoria: "", pregunta: "", respuesta: "", nivel_dificultad: "media", materia_id: materias[0]?.id });
     setCreando(false);
     setEditandoId(null);
   };
@@ -77,7 +80,10 @@ export function FlashcardsLista({
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">Mazo de Estudio</h2>
         {!creando && !editandoId && (
-          <Button onClick={() => setCreando(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 text-xs">
+          <Button onClick={() => {
+            setForm(prev => ({ ...prev, materia_id: materias[0]?.id }));
+            setCreando(true);
+          }} className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 text-xs">
             <Plus className="w-4 h-4 mr-2" /> Nueva Tarjeta
           </Button>
         )}
@@ -91,9 +97,22 @@ export function FlashcardsLista({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label className="text-xs">Categoría</Label>
+                <Label className="text-xs">Mazo / Materia</Label>
+                <select 
+                  className="w-full h-8 px-3 rounded-md border border-slate-200 bg-white text-xs dark:border-slate-800 dark:bg-slate-900"
+                  value={form.materia_id || ""}
+                  onChange={(e) => setForm({...form, materia_id: e.target.value})}
+                >
+                  <option value="">Sin Materia (General)</option>
+                  {materias.map(m => (
+                    <option key={m.id} value={m.id}>{m.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Categoría (Tema)</Label>
                 <Input 
                   value={form.categoria} 
                   onChange={(e) => setForm({...form, categoria: e.target.value})} 

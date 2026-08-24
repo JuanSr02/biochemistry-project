@@ -147,7 +147,7 @@ let MOCK_LABORATORIOS: Laboratorio[] = [
 // ==============================================================================
 // MATERIAS ACTIONS
 // ==============================================================================
-export async function getMaterias(estudianteId?: string): Promise<{ success: boolean; data: Materia[] }> {
+export async function getMaterias(estudianteId?: string): Promise<{ success: boolean; data: Materia[]; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
       let query = supabase.from("materias").select("*");
@@ -159,8 +159,13 @@ export async function getMaterias(estudianteId?: string): Promise<{ success: boo
       if (!error && data) {
         return { success: true, data: data as Materia[] };
       }
-    } catch {
-      // Fallback si la conexión a Supabase falla
+      if (error) {
+        console.error("Supabase error en getMaterias:", error);
+        return { success: false, error: error.message, data: [] };
+      }
+    } catch (e: any) {
+      console.error("Fetch error en getMaterias:", e);
+      return { success: false, error: e.message || "Error de red", data: [] };
     }
   }
 
@@ -196,8 +201,13 @@ export async function crearMateria(
       if (!error && data) {
         return { success: true, data: data as Materia };
       }
-    } catch {
-      // Fallback
+      if (error) {
+        console.error("Supabase error en crearMateria:", error);
+        return { success: false, error: error.message };
+      }
+    } catch (e: any) {
+      console.error("Fetch error en crearMateria:", e);
+      return { success: false, error: e.message || "Error de red" };
     }
   }
 
@@ -220,10 +230,46 @@ export async function crearMateria(
   return { success: true, data: nuevaMateria };
 }
 
+export async function actualizarMateria(id: string, input: import("./types").ActualizarMateriaInput): Promise<{ success: boolean; data?: Materia; error?: string }> {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase.from("materias").update(input).eq("id", id).select().single();
+      if (!error && data) return { success: true, data: data as Materia };
+      if (error) return { success: false, error: error.message };
+    } catch (e: any) {
+      return { success: false, error: e.message || "Error de red" };
+    }
+  }
+  const idx = MOCK_MATERIAS.findIndex(m => m.id === id);
+  if (idx !== -1) {
+    MOCK_MATERIAS[idx] = { ...MOCK_MATERIAS[idx], ...input, updated_at: new Date().toISOString() } as Materia;
+    return { success: true, data: MOCK_MATERIAS[idx] };
+  }
+  return { success: false, error: "No encontrada" };
+}
+
+export async function eliminarMateria(id: string): Promise<{ success: boolean; error?: string }> {
+  if (isSupabaseConfigured()) {
+    try {
+      const { error } = await supabase.from("materias").delete().eq("id", id);
+      if (!error) return { success: true };
+      return { success: false, error: error.message };
+    } catch (e: any) {
+      return { success: false, error: e.message || "Error de red" };
+    }
+  }
+  const idx = MOCK_MATERIAS.findIndex(m => m.id === id);
+  if (idx !== -1) {
+    MOCK_MATERIAS.splice(idx, 1);
+    return { success: true };
+  }
+  return { success: false, error: "No encontrada" };
+}
+
 // ==============================================================================
 // TRABAJOS PRÁCTICOS ACTIONS
 // ==============================================================================
-export async function getTrabajosPracticos(estudianteId?: string): Promise<{ success: boolean; data: TrabajoPractico[] }> {
+export async function getTrabajosPracticos(estudianteId?: string): Promise<{ success: boolean; data: TrabajoPractico[]; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
       let query = supabase.from("trabajos_practicos").select("*, materias(nombre)");
@@ -280,8 +326,13 @@ export async function crearTrabajoPractico(
           data: { ...data, materia_nombre: (data as any).materias?.nombre || "General" },
         };
       }
-    } catch {
-      // Fallback
+      if (error) {
+        console.error("Supabase error en crearTrabajoPractico:", error);
+        return { success: false, error: error.message };
+      }
+    } catch (e: any) {
+      console.error("Fetch error en crearTrabajoPractico:", e);
+      return { success: false, error: e.message || "Error de red" };
     }
   }
 
@@ -332,10 +383,51 @@ export async function cambiarEstadoTP(
   return { success: true };
 }
 
+export async function actualizarTrabajoPractico(id: string, input: import("./types").ActualizarTrabajoPracticoInput): Promise<{ success: boolean; data?: TrabajoPractico; error?: string }> {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase.from("trabajos_practicos").update(input).eq("id", id).select("*, materias(nombre)").single();
+      if (!error && data) return { success: true, data: { ...data, materia_nombre: (data as any).materias?.nombre || "General" } as TrabajoPractico };
+      if (error) return { success: false, error: error.message };
+    } catch (e: any) {
+      return { success: false, error: e.message || "Error de red" };
+    }
+  }
+  const idx = MOCK_TRABAJOS_PRACTICOS.findIndex(t => t.id === id);
+  if (idx !== -1) {
+    let materiaNombre = MOCK_TRABAJOS_PRACTICOS[idx].materia_nombre;
+    if (input.materia_id) {
+      const materia = MOCK_MATERIAS.find(m => m.id === input.materia_id);
+      if (materia) materiaNombre = materia.nombre;
+    }
+    MOCK_TRABAJOS_PRACTICOS[idx] = { ...MOCK_TRABAJOS_PRACTICOS[idx], ...input, materia_nombre: materiaNombre, updated_at: new Date().toISOString() } as TrabajoPractico;
+    return { success: true, data: MOCK_TRABAJOS_PRACTICOS[idx] };
+  }
+  return { success: false, error: "No encontrado" };
+}
+
+export async function eliminarTrabajoPractico(id: string): Promise<{ success: boolean; error?: string }> {
+  if (isSupabaseConfigured()) {
+    try {
+      const { error } = await supabase.from("trabajos_practicos").delete().eq("id", id);
+      if (!error) return { success: true };
+      return { success: false, error: error.message };
+    } catch (e: any) {
+      return { success: false, error: e.message || "Error de red" };
+    }
+  }
+  const idx = MOCK_TRABAJOS_PRACTICOS.findIndex(t => t.id === id);
+  if (idx !== -1) {
+    MOCK_TRABAJOS_PRACTICOS.splice(idx, 1);
+    return { success: true };
+  }
+  return { success: false, error: "No encontrado" };
+}
+
 // ==============================================================================
 // LABORATORIOS & TAREAS ACTIONS
 // ==============================================================================
-export async function getLaboratorios(estudianteId?: string): Promise<{ success: boolean; data: Laboratorio[] }> {
+export async function getLaboratorios(estudianteId?: string): Promise<{ success: boolean; data: Laboratorio[]; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
       let query = supabase.from("laboratorios").select("*, materias(nombre), tareas_laboratorio(*)");
@@ -417,8 +509,13 @@ export async function crearLaboratorio(
           },
         };
       }
-    } catch {
-      // Fallback
+      if (labError) {
+        console.error("Supabase error en crearLaboratorio:", labError);
+        return { success: false, error: labError.message };
+      }
+    } catch (e: any) {
+      console.error("Fetch error en crearLaboratorio:", e);
+      return { success: false, error: e.message || "Error de red" };
     }
   }
 
@@ -526,4 +623,51 @@ export async function cambiarEstadoLaboratorio(
     lab.updated_at = new Date().toISOString();
   }
   return { success: true };
+}
+
+export async function actualizarLaboratorio(id: string, input: import("./types").ActualizarLaboratorioInput): Promise<{ success: boolean; data?: Laboratorio; error?: string }> {
+  if (isSupabaseConfigured()) {
+    try {
+      const payload: any = {};
+      if (input.titulo) payload.titulo = input.titulo.trim();
+      if (input.fecha) payload.fecha = input.fecha;
+      if (input.observaciones !== undefined) payload.observaciones = input.observaciones?.trim() || null;
+      if (input.materia_id) payload.materia_id = input.materia_id;
+
+      const { data, error } = await supabase.from("laboratorios").update(payload).eq("id", id).select("*, materias(nombre)").single();
+      if (!error && data) return { success: true, data: { ...data, materia_nombre: (data as any).materias?.nombre || "General" } as Laboratorio };
+      if (error) return { success: false, error: error.message };
+    } catch (e: any) {
+      return { success: false, error: e.message || "Error de red" };
+    }
+  }
+  const idx = MOCK_LABORATORIOS.findIndex(l => l.id === id);
+  if (idx !== -1) {
+    let materiaNombre = MOCK_LABORATORIOS[idx].materia_nombre;
+    if (input.materia_id) {
+      const materia = MOCK_MATERIAS.find(m => m.id === input.materia_id);
+      if (materia) materiaNombre = materia.nombre;
+    }
+    MOCK_LABORATORIOS[idx] = { ...MOCK_LABORATORIOS[idx], ...input, materia_nombre: materiaNombre, updated_at: new Date().toISOString() } as Laboratorio;
+    return { success: true, data: MOCK_LABORATORIOS[idx] };
+  }
+  return { success: false, error: "No encontrado" };
+}
+
+export async function eliminarLaboratorio(id: string): Promise<{ success: boolean; error?: string }> {
+  if (isSupabaseConfigured()) {
+    try {
+      const { error } = await supabase.from("laboratorios").delete().eq("id", id);
+      if (!error) return { success: true };
+      return { success: false, error: error.message };
+    } catch (e: any) {
+      return { success: false, error: e.message || "Error de red" };
+    }
+  }
+  const idx = MOCK_LABORATORIOS.findIndex(l => l.id === id);
+  if (idx !== -1) {
+    MOCK_LABORATORIOS.splice(idx, 1);
+    return { success: true };
+  }
+  return { success: false, error: "No encontrado" };
 }

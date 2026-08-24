@@ -7,8 +7,8 @@ import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/core/components/ui/card";
-import { crearLaboratorio, toggleTareaLaboratorio, cambiarEstadoLaboratorio } from "../actions";
-import { Plus, FlaskConical, Calendar, CheckSquare, Square, Trash2, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { crearLaboratorio, toggleTareaLaboratorio, cambiarEstadoLaboratorio, actualizarLaboratorio, eliminarLaboratorio } from "../actions";
+import { Plus, FlaskConical, Calendar, CheckSquare, Square, Trash2, CheckCircle2, Clock, AlertCircle, Edit2, X } from "lucide-react";
 
 interface LaboratoriosListaProps {
   laboratorios: Laboratorio[];
@@ -18,6 +18,7 @@ interface LaboratoriosListaProps {
 
 export function LaboratoriosLista({ laboratorios, materias, onRefresh }: LaboratoriosListaProps) {
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [materiaId, setMateriaId] = useState(materias[0]?.id || "");
   const [titulo, setTitulo] = useState("");
   const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
@@ -62,14 +63,26 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
       // ignore
     }
 
-    const res = await crearLaboratorio({
+    const payload = {
       materia_id: materiaId || (materias[0]?.id ?? "mat-1"),
       titulo,
       fecha,
       observaciones,
       tareasIniciales,
       estudiante_id,
-    });
+    };
+
+    let res;
+    if (editandoId) {
+      res = await actualizarLaboratorio(editandoId, {
+        materia_id: payload.materia_id,
+        titulo: payload.titulo,
+        fecha: payload.fecha,
+        observaciones: payload.observaciones
+      });
+    } else {
+      res = await crearLaboratorio(payload);
+    }
 
     setCargando(false);
 
@@ -77,10 +90,45 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
       setTitulo("");
       setObservaciones("");
       setMostrarForm(false);
+      setEditandoId(null);
       onRefresh();
     } else {
-      setError(res.error || "No se pudo crear la sesión de laboratorio.");
+      setError(res.error || "No se pudo guardar la sesión de laboratorio.");
     }
+  };
+
+  const handleEdit = (lab: Laboratorio) => {
+    setMateriaId(lab.materia_id);
+    setTitulo(lab.titulo);
+    setFecha(lab.fecha);
+    setObservaciones(lab.observaciones || "");
+    setTareasIniciales([]); // Ocultar agregar tareas para edit
+    setEditandoId(lab.id);
+    setMostrarForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("¿Estás seguro de eliminar este laboratorio?")) {
+      const res = await eliminarLaboratorio(id);
+      if (res.success) {
+        onRefresh();
+      } else {
+        alert(res.error || "Error al eliminar");
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setTitulo("");
+    setObservaciones("");
+    setTareasIniciales([
+      "Armado de pipetas y calibración de pH-metro",
+      "Preparación de soluciones y muestras",
+      "Medición espectrofotométrica / Titulación",
+      "Limpieza y guardado de material de vidrio",
+    ]);
+    setEditandoId(null);
+    setMostrarForm(false);
   };
 
   const handleToggleTarea = async (labId: string, tareaId: string) => {
@@ -107,11 +155,17 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
           Sesiones de Laboratorio ({laboratorios.length})
         </h2>
         <Button
-          onClick={() => setMostrarForm(!mostrarForm)}
+          onClick={() => {
+            if (mostrarForm) resetForm();
+            else setMostrarForm(true);
+          }}
           className="h-10 rounded bg-emerald-600 text-white hover:bg-emerald-700 font-medium transition-colors sm:w-auto w-full"
         >
-          <Plus className="w-4 h-4 mr-1.5" />
-          {mostrarForm ? "Cancelar" : "Nuevo Laboratorio"}
+          {mostrarForm ? (
+            <><X className="w-4 h-4 mr-1.5" /> Cancelar</>
+          ) : (
+            <><Plus className="w-4 h-4 mr-1.5" /> Nuevo Laboratorio</>
+          )}
         </Button>
       </div>
 
@@ -119,10 +173,10 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
         <Card className="border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/20 rounded-lg p-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <CardHeader className="p-0 pb-3">
             <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              Registrar Nueva Sesión de Laboratorio
+              {editandoId ? "Editar Sesión de Laboratorio" : "Registrar Nueva Sesión de Laboratorio"}
             </CardTitle>
             <CardDescription className="text-xs text-slate-500">
-              Define el protocolo práctico y el checklist de tareas obligatorias en mesada.
+              {editandoId ? "Edita los detalles de la sesión." : "Define el protocolo práctico y el checklist de tareas obligatorias en mesada."}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -189,6 +243,7 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
               </div>
 
               {/* Tareas Checklist Manager */}
+              {!editandoId && (
               <div className="space-y-2 pt-2 border-t border-emerald-200/60 dark:border-emerald-900/60">
                 <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Tareas / Checklist de Mesada de Laboratorio
@@ -227,6 +282,7 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
                   </Button>
                 </div>
               </div>
+              )}
 
               {error && <p className="text-xs text-rose-600 font-medium">{error}</p>}
 
@@ -235,7 +291,7 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
                 disabled={cargando}
                 className="w-full h-10 rounded bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
               >
-                {cargando ? "Guardando..." : "Crear Sesión de Laboratorio"}
+                {cargando ? "Guardando..." : "Guardar Laboratorio"}
               </Button>
             </form>
           </CardContent>
@@ -264,7 +320,24 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
                     <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                       {lab.materia_nombre}
                     </span>
-                    {getEstadoBadge(lab.estado)}
+                    <div className="flex gap-1 items-center">
+                      <select
+                        value={lab.estado}
+                        onChange={(e) => cambiarEstadoLaboratorio(lab.id, e.target.value as EstadoLaboratorio).then(onRefresh)}
+                        className="text-xs p-1 rounded border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none mr-1"
+                      >
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en_progreso">En Progreso</option>
+                        <option value="completado">Completado</option>
+                      </select>
+                      {getEstadoBadge(lab.estado)}
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(lab)} className="h-6 w-6 text-slate-400 hover:text-emerald-600 ml-1">
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(lab.id)} className="h-6 w-6 text-slate-400 hover:text-rose-600">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
                   <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100 leading-snug mt-1">
                     {lab.titulo}

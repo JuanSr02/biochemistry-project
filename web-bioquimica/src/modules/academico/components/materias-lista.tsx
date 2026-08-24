@@ -8,8 +8,8 @@ import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/card";
-import { crearMateria } from "../actions";
-import { Plus, BookOpen, CheckCircle, Clock } from "lucide-react";
+import { crearMateria, actualizarMateria, eliminarMateria } from "../actions";
+import { Plus, BookOpen, CheckCircle, Clock, Edit2, Trash2, X } from "lucide-react";
 
 interface MateriasListaProps {
   materias: Materia[];
@@ -18,6 +18,7 @@ interface MateriasListaProps {
 
 export function MateriasLista({ materias, onRefresh }: MateriasListaProps) {
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [nombre, setNombre] = useState("");
   const [codigo, setCodigo] = useState("");
   const [profesor, setProfesor] = useState("");
@@ -44,18 +45,54 @@ export function MateriasLista({ materias, onRefresh }: MateriasListaProps) {
     } catch (e) {
       // ignore
     }
-    const res = await crearMateria({ nombre, codigo, profesor, cuatrimestre, estado, estudiante_id });
+    const payload = { nombre, codigo, profesor, cuatrimestre, estado, estudiante_id };
+    
+    let res;
+    if (editandoId) {
+      res = await actualizarMateria(editandoId, payload);
+    } else {
+      res = await crearMateria(payload);
+    }
     setCargando(false);
 
     if (res.success) {
       setNombre("");
       setCodigo("");
       setProfesor("");
-      setMostrarForm(false);
+      setEditandoId(null);
       onRefresh();
     } else {
-      setError(res.error || "No se pudo crear la materia.");
+      setError(res.error || "No se pudo guardar la materia.");
     }
+  };
+
+  const handleEdit = (mat: Materia) => {
+    setNombre(mat.nombre);
+    setCodigo(mat.codigo);
+    setProfesor(mat.profesor || "");
+    setCuatrimestre(mat.cuatrimestre);
+    setEstado(mat.estado);
+    setEditandoId(mat.id);
+    setMostrarForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("¿Estás seguro de eliminar esta materia?")) {
+      const res = await eliminarMateria(id);
+      if (res.success) {
+        onRefresh();
+      } else {
+        alert(res.error || "Error al eliminar");
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setNombre("");
+    setCodigo("");
+    setProfesor("");
+    setEditandoId(null);
+    setMostrarForm(false);
   };
 
   const getEstadoBadge = (est: EstadoMateria) => {
@@ -77,11 +114,17 @@ export function MateriasLista({ materias, onRefresh }: MateriasListaProps) {
           Materias Registradas ({materias.length})
         </h2>
         <Button
-          onClick={() => setMostrarForm(!mostrarForm)}
+          onClick={() => {
+            if (mostrarForm) resetForm();
+            else setMostrarForm(true);
+          }}
           className="h-10 rounded bg-emerald-600 text-white hover:bg-emerald-700 font-medium transition-colors sm:w-auto w-full"
         >
-          <Plus className="w-4 h-4 mr-1.5" />
-          {mostrarForm ? "Cancelar" : "Nueva Materia"}
+          {mostrarForm ? (
+            <><X className="w-4 h-4 mr-1.5" /> Cancelar</>
+          ) : (
+            <><Plus className="w-4 h-4 mr-1.5" /> Nueva Materia</>
+          )}
         </Button>
       </div>
 
@@ -89,7 +132,7 @@ export function MateriasLista({ materias, onRefresh }: MateriasListaProps) {
         <Card className="border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/20 rounded-lg p-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <CardHeader className="p-0 pb-3">
             <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              Registrar Nueva Materia
+              {editandoId ? "Editar Materia" : "Registrar Nueva Materia"}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -174,6 +217,7 @@ export function MateriasLista({ materias, onRefresh }: MateriasListaProps) {
               <TableHead className="hidden md:table-cell">Profesor</TableHead>
               <TableHead className="hidden sm:table-cell">Cuatrimestre</TableHead>
               <TableHead>Estado</TableHead>
+              <TableHead className="w-[100px] text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -199,6 +243,16 @@ export function MateriasLista({ materias, onRefresh }: MateriasListaProps) {
                     {mat.cuatrimestre}
                   </TableCell>
                   <TableCell>{getEstadoBadge(mat.estado)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(mat)} className="h-8 w-8 text-slate-400 hover:text-emerald-600">
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(mat.id)} className="h-8 w-8 text-slate-400 hover:text-rose-600">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}

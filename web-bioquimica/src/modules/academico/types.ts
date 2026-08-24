@@ -87,3 +87,7 @@ export interface CrearLaboratorioInput {
   tareasIniciales: string[];
   estudiante_id?: string;
 }
+
+export type ActualizarMateriaInput = Partial<CrearMateriaInput>;
+export type ActualizarTrabajoPracticoInput = Partial<CrearTrabajoPracticoInput>;
+export type ActualizarLaboratorioInput = Partial<CrearLaboratorioInput>;

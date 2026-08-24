@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { getTarjetasEstudio, registrarRespuestaFlashcard } from "@/modules/flashcards/actions";
+import { getMaterias } from "@/modules/academico/actions";
 import { TarjetaEstudio } from "@/modules/flashcards/types";
+import { Materia } from "@/modules/academico/types";
 import { FlashcardItem } from "@/modules/flashcards/components/flashcard-item";
 import { FlashcardsLista } from "@/modules/flashcards/components/flashcards-lista";
 import { Card, CardContent } from "@/core/components/ui/card";
@@ -13,6 +15,8 @@ import { ArrowLeft, Brain, RotateCw, CheckCircle2, Award, BookOpen, Settings } f
 
 export default function FlashcardsPage() {
   const [tarjetas, setTarjetas] = useState<TarjetaEstudio[]>([]);
+  const [materias, setMaterias] = useState<Materia[]>([]);
+  const [filtroMateria, setFiltroMateria] = useState<string>("todas");
   const [indexActual, setIndexActual] = useState(0);
   const [loading, setLoading] = useState(true);
   const [aciertos, setAciertos] = useState(0);
@@ -33,6 +37,10 @@ export default function FlashcardsPage() {
     }
     const res = await getTarjetasEstudio(userId);
     if (res.success) setTarjetas(res.data);
+    
+    const resMaterias = await getMaterias(userId);
+    if (resMaterias.success) setMaterias(resMaterias.data);
+
     setLoading(false);
   };
 
@@ -44,7 +52,8 @@ export default function FlashcardsPage() {
     setRefreshToggle(prev => !prev);
   };
 
-  const tarjetaActual = tarjetas[indexActual];
+  const tarjetasFiltradas = filtroMateria === "todas" ? tarjetas : tarjetas.filter(t => t.materia_id === filtroMateria);
+  const tarjetaActual = tarjetasFiltradas[indexActual];
 
   const handleResponder = async (sabias: boolean) => {
     if (!tarjetaActual) return;
@@ -58,7 +67,7 @@ export default function FlashcardsPage() {
     await registrarRespuestaFlashcard(tarjetaActual.id, sabias);
 
     // Avanzar a la siguiente tarjeta
-    if (indexActual < tarjetas.length - 1) {
+    if (indexActual < tarjetasFiltradas.length - 1) {
       setIndexActual((prev) => prev + 1);
     } else {
       // Reiniciar ciclo
@@ -95,6 +104,23 @@ export default function FlashcardsPage() {
         </p>
       </div>
 
+      <div className="flex items-center gap-2 max-w-sm">
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">Mazo:</span>
+        <select
+          value={filtroMateria}
+          onChange={(e) => {
+            setFiltroMateria(e.target.value);
+            reiniciarSesion();
+          }}
+          className="w-full h-9 px-3 rounded-md border border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        >
+          <option value="todas">Todos los Mazos</option>
+          {materias.map(m => (
+            <option key={m.id} value={m.id}>{m.nombre}</option>
+          ))}
+        </select>
+      </div>
+
       <Tabs defaultValue="repaso" className="w-full">
         <TabsList className="mb-6 inline-flex h-10 items-center justify-center rounded-md bg-slate-100 p-1 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
           <TabsTrigger value="repaso" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300 dark:data-[state=active]:bg-slate-950 dark:data-[state=active]:text-slate-50">
@@ -128,7 +154,7 @@ export default function FlashcardsPage() {
                 <div>
                   <span className="text-xs text-slate-500 block">Progreso Mazo</span>
                   <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                    {tarjetas.length > 0 ? `${indexActual + 1} / ${tarjetas.length}` : "0"}
+                    {tarjetasFiltradas.length > 0 ? `${indexActual + 1} / ${tarjetasFiltradas.length}` : "0"}
                   </span>
                 </div>
               </div>
@@ -179,7 +205,7 @@ export default function FlashcardsPage() {
         </TabsContent>
 
         <TabsContent value="gestion" className="space-y-6">
-          <FlashcardsLista tarjetas={tarjetas} onUpdate={handleUpdate} />
+          <FlashcardsLista tarjetas={tarjetasFiltradas} materias={materias} onUpdate={handleUpdate} />
         </TabsContent>
       </Tabs>
     </div>

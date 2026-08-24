@@ -8,8 +8,8 @@ import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/card";
-import { crearTrabajoPractico, cambiarEstadoTP } from "../actions";
-import { Plus, FileSpreadsheet, Calendar, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { crearTrabajoPractico, cambiarEstadoTP, actualizarTrabajoPractico, eliminarTrabajoPractico } from "../actions";
+import { Plus, FileSpreadsheet, Calendar, CheckCircle2, Clock, AlertCircle, Edit2, Trash2, X } from "lucide-react";
 
 interface TpsListaProps {
   tps: TrabajoPractico[];
@@ -19,6 +19,7 @@ interface TpsListaProps {
 
 export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [materiaId, setMateriaId] = useState(materias[0]?.id || "");
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -48,14 +49,21 @@ export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
       // ignore
     }
 
-    const res = await crearTrabajoPractico({
+    const payload = {
       materia_id: materiaId || (materias[0]?.id ?? "mat-1"),
       titulo,
       descripcion,
       fecha_entrega: fechaEntrega,
       estado,
       estudiante_id,
-    });
+    };
+
+    let res;
+    if (editandoId) {
+      res = await actualizarTrabajoPractico(editandoId, payload);
+    } else {
+      res = await crearTrabajoPractico(payload);
+    }
 
     setCargando(false);
 
@@ -63,10 +71,39 @@ export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
       setTitulo("");
       setDescripcion("");
       setMostrarForm(false);
+      setEditandoId(null);
       onRefresh();
     } else {
-      setError(res.error || "No se pudo crear el trabajo práctico.");
+      setError(res.error || "No se pudo guardar el trabajo práctico.");
     }
+  };
+
+  const handleEdit = (tp: TrabajoPractico) => {
+    setMateriaId(tp.materia_id);
+    setTitulo(tp.titulo);
+    setDescripcion(tp.descripcion || "");
+    setFechaEntrega(tp.fecha_entrega);
+    setEstado(tp.estado);
+    setEditandoId(tp.id);
+    setMostrarForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("¿Estás seguro de eliminar este trabajo práctico?")) {
+      const res = await eliminarTrabajoPractico(id);
+      if (res.success) {
+        onRefresh();
+      } else {
+        alert(res.error || "Error al eliminar");
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setTitulo("");
+    setDescripcion("");
+    setEditandoId(null);
+    setMostrarForm(false);
   };
 
   const handleCambiarEstado = async (id: string, nuevoEstado: EstadoTP) => {
@@ -93,11 +130,17 @@ export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
           Trabajos Prácticos ({tps.length})
         </h2>
         <Button
-          onClick={() => setMostrarForm(!mostrarForm)}
+          onClick={() => {
+            if (mostrarForm) resetForm();
+            else setMostrarForm(true);
+          }}
           className="h-10 rounded bg-emerald-600 text-white hover:bg-emerald-700 font-medium transition-colors sm:w-auto w-full"
         >
-          <Plus className="w-4 h-4 mr-1.5" />
-          {mostrarForm ? "Cancelar" : "Nuevo TP"}
+          {mostrarForm ? (
+            <><X className="w-4 h-4 mr-1.5" /> Cancelar</>
+          ) : (
+            <><Plus className="w-4 h-4 mr-1.5" /> Nuevo TP</>
+          )}
         </Button>
       </div>
 
@@ -105,7 +148,7 @@ export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
         <Card className="border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/20 rounded-lg p-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <CardHeader className="p-0 pb-3">
             <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              Registrar Trabajo Práctico de Laboratorio
+              {editandoId ? "Editar Trabajo Práctico" : "Registrar Trabajo Práctico de Laboratorio"}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -239,15 +282,23 @@ export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
                   </TableCell>
                   <TableCell>{getEstadoBadge(tp.estado)}</TableCell>
                   <TableCell className="text-right">
-                    <select
-                      value={tp.estado}
-                      onChange={(e) => handleCambiarEstado(tp.id, e.target.value as EstadoTP)}
-                      className="text-xs p-1 rounded border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none"
-                    >
-                      <option value="pendiente">Marcar Pendiente</option>
-                      <option value="en_progreso">Marcar En Progreso</option>
-                      <option value="entregado">Marcar Entregado</option>
-                    </select>
+                    <div className="flex justify-end gap-1 items-center">
+                      <select
+                        value={tp.estado}
+                        onChange={(e) => handleCambiarEstado(tp.id, e.target.value as EstadoTP)}
+                        className="text-xs p-1 rounded border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none"
+                      >
+                        <option value="pendiente">Marcar Pendiente</option>
+                        <option value="en_progreso">Marcar En Progreso</option>
+                        <option value="entregado">Marcar Entregado</option>
+                      </select>
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(tp)} className="h-8 w-8 text-slate-400 hover:text-emerald-600">
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(tp.id)} className="h-8 w-8 text-slate-400 hover:text-rose-600">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

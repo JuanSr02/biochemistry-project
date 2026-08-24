@@ -202,9 +202,9 @@ ALTER TABLE public.laboratorios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tareas_laboratorio ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tarjetas_estudio ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Permitir acceso completo a usuarios autenticados" ON public.usuarios FOR ALL USING (auth.uid() = id);
-CREATE POLICY "Permitir acceso completo a materias" ON public.materias FOR ALL USING (auth.uid() = estudiante_id);
-CREATE POLICY "Permitir acceso completo a trabajos_practicos" ON public.trabajos_practicos FOR ALL USING (auth.uid() = estudiante_id);
-CREATE POLICY "Permitir acceso completo a laboratorios" ON public.laboratorios FOR ALL USING (auth.uid() = estudiante_id);
-CREATE POLICY "Permitir acceso completo a tareas_laboratorio" ON public.tareas_laboratorio FOR ALL USING (auth.uid() = estudiante_id);
-CREATE POLICY "Permitir acceso completo a tarjetas_estudio" ON public.tarjetas_estudio FOR ALL USING (auth.uid() = estudiante_id);
+CREATE POLICY "Permitir acceso completo a usuarios autenticados" ON public.usuarios FOR ALL USING (true);
+CREATE POLICY "Permitir acceso completo a materias" ON public.materias FOR ALL USING (true);
+CREATE POLICY "Permitir acceso completo a trabajos_practicos" ON public.trabajos_practicos FOR ALL USING (true);
+CREATE POLICY "Permitir acceso completo a laboratorios" ON public.laboratorios FOR ALL USING (true);
+CREATE POLICY "Permitir acceso completo a tareas_laboratorio" ON public.tareas_laboratorio FOR ALL USING (true);
+CREATE POLICY "Permitir acceso completo a tarjetas_estudio" ON public.tarjetas_estudio FOR ALL USING (true);
