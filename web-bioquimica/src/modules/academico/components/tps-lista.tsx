@@ -38,6 +38,15 @@ export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
 
     setCargando(true);
     setError(null);
+    let estudiante_id: string | undefined = undefined;
+    try {
+      const stored = localStorage.getItem("biotools_user");
+      if (stored) {
+        estudiante_id = JSON.parse(stored).id;
+      }
+    } catch (e) {
+      // ignore
+    }
 
     const res = await crearTrabajoPractico({
       materia_id: materiaId || (materias[0]?.id ?? "mat-1"),
@@ -45,6 +54,7 @@ export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
       descripcion,
       fecha_entrega: fechaEntrega,
       estado,
+      estudiante_id,
     });
 
     setCargando(false);

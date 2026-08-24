@@ -44,10 +44,22 @@ export function FlashcardsLista({
   };
 
   const handleGuardar = async () => {
+    let estudiante_id: string | undefined = undefined;
+    try {
+      const stored = localStorage.getItem("biotools_user");
+      if (stored) {
+        estudiante_id = JSON.parse(stored).id;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    const payload = { ...form, estudiante_id };
+
     if (editandoId) {
-      await actualizarFlashcard(editandoId, form as ActualizarFlashcardInput);
+      await actualizarFlashcard(editandoId, payload as ActualizarFlashcardInput);
     } else {
-      await crearFlashcard(form);
+      await crearFlashcard(payload);
     }
     resetForm();
     onUpdate();

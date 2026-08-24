@@ -18,10 +18,21 @@ export default function AcademicoPage() {
 
   const cargarDatos = useCallback(async () => {
     setLoading(true);
+    let userId: string | undefined = undefined;
+    try {
+      const stored = localStorage.getItem("biotools_user");
+      if (stored) {
+        const user = JSON.parse(stored);
+        userId = user.id;
+      }
+    } catch (e) {
+      // ignore
+    }
+
     const [resMat, resTps, resLabs] = await Promise.all([
-      getMaterias(),
-      getTrabajosPracticos(),
-      getLaboratorios(),
+      getMaterias(userId),
+      getTrabajosPracticos(userId),
+      getLaboratorios(userId),
     ]);
 
     if (resMat.success) setMaterias(resMat.data);

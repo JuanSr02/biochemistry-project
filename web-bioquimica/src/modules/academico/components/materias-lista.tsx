@@ -35,7 +35,16 @@ export function MateriasLista({ materias, onRefresh }: MateriasListaProps) {
 
     setCargando(true);
     setError(null);
-    const res = await crearMateria({ nombre, codigo, profesor, cuatrimestre, estado });
+    let estudiante_id: string | undefined = undefined;
+    try {
+      const stored = localStorage.getItem("biotools_user");
+      if (stored) {
+        estudiante_id = JSON.parse(stored).id;
+      }
+    } catch (e) {
+      // ignore
+    }
+    const res = await crearMateria({ nombre, codigo, profesor, cuatrimestre, estado, estudiante_id });
     setCargando(false);
 
     if (res.success) {

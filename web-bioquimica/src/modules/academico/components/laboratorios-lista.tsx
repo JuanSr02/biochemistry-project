@@ -52,6 +52,15 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
 
     setCargando(true);
     setError(null);
+    let estudiante_id: string | undefined = undefined;
+    try {
+      const stored = localStorage.getItem("biotools_user");
+      if (stored) {
+        estudiante_id = JSON.parse(stored).id;
+      }
+    } catch (e) {
+      // ignore
+    }
 
     const res = await crearLaboratorio({
       materia_id: materiaId || (materias[0]?.id ?? "mat-1"),
@@ -59,6 +68,7 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
       fecha,
       observaciones,
       tareasIniciales,
+      estudiante_id,
     });
 
     setCargando(false);

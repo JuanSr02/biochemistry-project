@@ -16,6 +16,7 @@ export interface TarjetaEstudio {
   created_by: string;
   updated_at: string;
   updated_by: string;
+  estudiante_id?: string;
 }
 
 export type Flashcard = TarjetaEstudio;
@@ -26,6 +27,7 @@ export interface CrearFlashcardInput {
   pregunta: string;
   respuesta: string;
   nivel_dificultad: NivelDificultad;
+  estudiante_id?: string;
 }
 
 export interface ActualizarFlashcardInput {

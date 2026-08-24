@@ -21,7 +21,17 @@ export default function FlashcardsPage() {
 
   const fetchTarjetas = async () => {
     setLoading(true);
-    const res = await getTarjetasEstudio();
+    let userId: string | undefined = undefined;
+    try {
+      const stored = localStorage.getItem("biotools_user");
+      if (stored) {
+        const user = JSON.parse(stored);
+        userId = user.id;
+      }
+    } catch (e) {
+      // ignore
+    }
+    const res = await getTarjetasEstudio(userId);
     if (res.success) setTarjetas(res.data);
     setLoading(false);
   };

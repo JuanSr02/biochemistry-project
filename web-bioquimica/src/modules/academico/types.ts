@@ -13,6 +13,7 @@ export interface Materia {
   created_by: string;
   updated_at: string;
   updated_by: string;
+  estudiante_id?: string;
 }
 
 export interface TrabajoPractico {
@@ -28,6 +29,7 @@ export interface TrabajoPractico {
   created_by: string;
   updated_at: string;
   updated_by: string;
+  estudiante_id?: string;
 }
 
 export interface TareaLaboratorio {
@@ -55,6 +57,7 @@ export interface Laboratorio {
   created_by: string;
   updated_at: string;
   updated_by: string;
+  estudiante_id?: string;
 }
 
 export interface CrearMateriaInput {
@@ -63,6 +66,7 @@ export interface CrearMateriaInput {
   profesor?: string;
   cuatrimestre: string;
   estado: EstadoMateria;
+  estudiante_id?: string;
 }
 
 export interface CrearTrabajoPracticoInput {
@@ -72,6 +76,7 @@ export interface CrearTrabajoPracticoInput {
   fecha_entrega: string;
   estado: EstadoTP;
   calificacion?: number;
+  estudiante_id?: string;
 }
 
 export interface CrearLaboratorioInput {
@@ -80,4 +85,5 @@ export interface CrearLaboratorioInput {
   fecha: string;
   observaciones?: string;
   tareasIniciales: string[];
+  estudiante_id?: string;
 }

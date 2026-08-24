@@ -147,13 +147,14 @@ let MOCK_LABORATORIOS: Laboratorio[] = [
 // ==============================================================================
 // MATERIAS ACTIONS
 // ==============================================================================
-export async function getMaterias(): Promise<{ success: boolean; data: Materia[] }> {
+export async function getMaterias(estudianteId?: string): Promise<{ success: boolean; data: Materia[] }> {
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
-        .from("materias")
-        .select("*")
-        .order("created_at", { ascending: false });
+      let query = supabase.from("materias").select("*");
+      if (estudianteId) {
+        query = query.eq("estudiante_id", estudianteId);
+      }
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (!error && data) {
         return { success: true, data: data as Materia[] };
@@ -163,7 +164,11 @@ export async function getMaterias(): Promise<{ success: boolean; data: Materia[]
     }
   }
 
-  return { success: true, data: [...MOCK_MATERIAS] };
+  let materiasResult = [...MOCK_MATERIAS];
+  if (estudianteId) {
+    materiasResult = materiasResult.filter(m => m.estudiante_id === estudianteId);
+  }
+  return { success: true, data: materiasResult };
 }
 
 export async function crearMateria(
@@ -183,6 +188,7 @@ export async function crearMateria(
           profesor: input.profesor?.trim() || null,
           cuatrimestre: input.cuatrimestre.trim() || "1º Cuatrimestre 2026",
           estado: input.estado,
+          estudiante_id: input.estudiante_id,
         })
         .select()
         .single();
@@ -203,10 +209,11 @@ export async function crearMateria(
     profesor: input.profesor?.trim() || undefined,
     cuatrimestre: input.cuatrimestre.trim() || "1º Cuatrimestre 2026",
     estado: input.estado,
+    estudiante_id: input.estudiante_id,
     created_at: new Date().toISOString(),
-    created_by: "00000000-0000-0000-0000-000000000001",
+    created_by: input.estudiante_id || "00000000-0000-0000-0000-000000000001",
     updated_at: new Date().toISOString(),
-    updated_by: "00000000-0000-0000-0000-000000000001",
+    updated_by: input.estudiante_id || "00000000-0000-0000-0000-000000000001",
   };
 
   MOCK_MATERIAS.unshift(nuevaMateria);
@@ -216,13 +223,14 @@ export async function crearMateria(
 // ==============================================================================
 // TRABAJOS PRÁCTICOS ACTIONS
 // ==============================================================================
-export async function getTrabajosPracticos(): Promise<{ success: boolean; data: TrabajoPractico[] }> {
+export async function getTrabajosPracticos(estudianteId?: string): Promise<{ success: boolean; data: TrabajoPractico[] }> {
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
-        .from("trabajos_practicos")
-        .select("*, materias(nombre)")
-        .order("fecha_entrega", { ascending: true });
+      let query = supabase.from("trabajos_practicos").select("*, materias(nombre)");
+      if (estudianteId) {
+        query = query.eq("estudiante_id", estudianteId);
+      }
+      const { data, error } = await query.order("fecha_entrega", { ascending: true });
 
       if (!error && data) {
         const formatted = data.map((item: any) => ({
@@ -236,7 +244,11 @@ export async function getTrabajosPracticos(): Promise<{ success: boolean; data: 
     }
   }
 
-  return { success: true, data: [...MOCK_TRABAJOS_PRACTICOS] };
+  let tpsResult = [...MOCK_TRABAJOS_PRACTICOS];
+  if (estudianteId) {
+    tpsResult = tpsResult.filter(t => t.estudiante_id === estudianteId);
+  }
+  return { success: true, data: tpsResult };
 }
 
 export async function crearTrabajoPractico(
@@ -257,6 +269,7 @@ export async function crearTrabajoPractico(
           fecha_entrega: input.fecha_entrega,
           estado: input.estado,
           calificacion: input.calificacion || null,
+          estudiante_id: input.estudiante_id,
         })
         .select("*, materias(nombre)")
         .single();
@@ -283,10 +296,11 @@ export async function crearTrabajoPractico(
     fecha_entrega: input.fecha_entrega,
     estado: input.estado,
     calificacion: input.calificacion,
+    estudiante_id: input.estudiante_id,
     created_at: new Date().toISOString(),
-    created_by: "00000000-0000-0000-0000-000000000001",
+    created_by: input.estudiante_id || "00000000-0000-0000-0000-000000000001",
     updated_at: new Date().toISOString(),
-    updated_by: "00000000-0000-0000-0000-000000000001",
+    updated_by: input.estudiante_id || "00000000-0000-0000-0000-000000000001",
   };
 
   MOCK_TRABAJOS_PRACTICOS.unshift(nuevoTP);
@@ -321,13 +335,14 @@ export async function cambiarEstadoTP(
 // ==============================================================================
 // LABORATORIOS & TAREAS ACTIONS
 // ==============================================================================
-export async function getLaboratorios(): Promise<{ success: boolean; data: Laboratorio[] }> {
+export async function getLaboratorios(estudianteId?: string): Promise<{ success: boolean; data: Laboratorio[] }> {
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
-        .from("laboratorios")
-        .select("*, materias(nombre), tareas_laboratorio(*)")
-        .order("fecha", { ascending: true });
+      let query = supabase.from("laboratorios").select("*, materias(nombre), tareas_laboratorio(*)");
+      if (estudianteId) {
+        query = query.eq("estudiante_id", estudianteId);
+      }
+      const { data, error } = await query.order("fecha", { ascending: true });
 
       if (!error && data) {
         const formatted = data.map((lab: any) => ({
@@ -342,7 +357,11 @@ export async function getLaboratorios(): Promise<{ success: boolean; data: Labor
     }
   }
 
-  return { success: true, data: [...MOCK_LABORATORIOS] };
+  let labsResult = [...MOCK_LABORATORIOS];
+  if (estudianteId) {
+    labsResult = labsResult.filter(l => l.estudiante_id === estudianteId);
+  }
+  return { success: true, data: labsResult };
 }
 
 export async function crearLaboratorio(
@@ -363,6 +382,7 @@ export async function crearLaboratorio(
           fecha: input.fecha,
           observaciones: input.observaciones?.trim() || null,
           estado: "pendiente",
+          estudiante_id: input.estudiante_id,
         })
         .select("*, materias(nombre)")
         .single();
@@ -376,6 +396,7 @@ export async function crearLaboratorio(
             descripcion: desc.trim(),
             completada: false,
             orden: idx + 1,
+            estudiante_id: input.estudiante_id,
           }));
 
         let tareasResult: TareaLaboratorio[] = [];
@@ -428,10 +449,11 @@ export async function crearLaboratorio(
     observaciones: input.observaciones?.trim() || undefined,
     estado: "pendiente",
     tareas,
+    estudiante_id: input.estudiante_id,
     created_at: new Date().toISOString(),
-    created_by: "00000000-0000-0000-0000-000000000001",
+    created_by: input.estudiante_id || "00000000-0000-0000-0000-000000000001",
     updated_at: new Date().toISOString(),
-    updated_by: "00000000-0000-0000-0000-000000000001",
+    updated_by: input.estudiante_id || "00000000-0000-0000-0000-000000000001",
   };
 
   MOCK_LABORATORIOS.unshift(nuevoLab);

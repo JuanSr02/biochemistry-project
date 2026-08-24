@@ -71,13 +71,14 @@ let MOCK_FLASHCARDS: TarjetaEstudio[] = [
   },
 ];
 
-export async function getTarjetasEstudio(): Promise<{ success: boolean; data: TarjetaEstudio[] }> {
+export async function getTarjetasEstudio(estudianteId?: string): Promise<{ success: boolean; data: TarjetaEstudio[] }> {
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
-        .from("tarjetas_estudio")
-        .select("*, materias(nombre)")
-        .order("created_at", { ascending: false });
+      let query = supabase.from("tarjetas_estudio").select("*, materias(nombre)");
+      if (estudianteId) {
+        query = query.eq("estudiante_id", estudianteId);
+      }
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (!error && data) {
         const formatted = data.map((item: any) => ({
@@ -91,9 +92,14 @@ export async function getTarjetasEstudio(): Promise<{ success: boolean; data: Ta
     }
   }
 
+  let result = [...MOCK_FLASHCARDS];
+  if (estudianteId) {
+    result = result.filter(f => f.estudiante_id === estudianteId);
+  }
+
   return {
     success: true,
-    data: [...MOCK_FLASHCARDS],
+    data: result,
   };
 }
 
@@ -173,6 +179,7 @@ export async function crearFlashcard(
           nivel_dificultad: input.nivel_dificultad,
           estado_repaso: "nuevo",
           repasos_correctos: 0,
+          estudiante_id: input.estudiante_id,
         })
         .select("*, materias(nombre)")
         .single();
@@ -209,10 +216,11 @@ export async function crearFlashcard(
     nivel_dificultad: input.nivel_dificultad,
     estado_repaso: "nuevo",
     repasos_correctos: 0,
+    estudiante_id: input.estudiante_id,
     created_at: new Date().toISOString(),
-    created_by: "00000000-0000-0000-0000-000000000001",
+    created_by: input.estudiante_id || "00000000-0000-0000-0000-000000000001",
     updated_at: new Date().toISOString(),
-    updated_by: "00000000-0000-0000-0000-000000000001",
+    updated_by: input.estudiante_id || "00000000-0000-0000-0000-000000000001",
   };
 
   MOCK_FLASHCARDS.unshift(nuevaCard);

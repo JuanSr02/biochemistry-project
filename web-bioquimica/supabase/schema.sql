@@ -11,6 +11,16 @@
 -- Los triggers para actualizar el updated_at son strictly FOR EACH ROW.
 -- ==============================================================================
 
+-- ------------------------------------------------------------------------------
+-- 0. ELIMINAR TABLAS EXISTENTES PARA RECREARLAS
+-- ------------------------------------------------------------------------------
+DROP TABLE IF EXISTS public.tarjetas_estudio CASCADE;
+DROP TABLE IF EXISTS public.tareas_laboratorio CASCADE;
+DROP TABLE IF EXISTS public.laboratorios CASCADE;
+DROP TABLE IF EXISTS public.trabajos_practicos CASCADE;
+DROP TABLE IF EXISTS public.materias CASCADE;
+DROP TABLE IF EXISTS public.usuarios CASCADE;
+
 -- Habilitar extensión UUID si no está activa
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -40,6 +50,7 @@ CREATE TABLE IF NOT EXISTS public.materias (
     profesor VARCHAR(255),
     cuatrimestre VARCHAR(100) NOT NULL,
     estado VARCHAR(50) DEFAULT 'cursando' NOT NULL CHECK (estado IN ('cursando', 'aprobada', 'pendiente')),
+    estudiante_id UUID NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
     
     -- COLUMNAS OBLIGATORIAS DE AUDITORÍA
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -59,6 +70,7 @@ CREATE TABLE IF NOT EXISTS public.trabajos_practicos (
     fecha_entrega DATE NOT NULL,
     estado VARCHAR(50) DEFAULT 'pendiente' NOT NULL CHECK (estado IN ('pendiente', 'en_progreso', 'entregado')),
     calificacion NUMERIC(4, 2),
+    estudiante_id UUID NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
     
     -- COLUMNAS OBLIGATORIAS DE AUDITORÍA
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -77,6 +89,7 @@ CREATE TABLE IF NOT EXISTS public.laboratorios (
     fecha DATE NOT NULL,
     observaciones TEXT,
     estado VARCHAR(50) DEFAULT 'pendiente' NOT NULL CHECK (estado IN ('pendiente', 'en_progreso', 'completado')),
+    estudiante_id UUID NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
     
     -- COLUMNAS OBLIGATORIAS DE AUDITORÍA
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -94,6 +107,7 @@ CREATE TABLE IF NOT EXISTS public.tareas_laboratorio (
     descripcion TEXT NOT NULL,
     completada BOOLEAN DEFAULT FALSE NOT NULL,
     orden INT DEFAULT 1 NOT NULL,
+    estudiante_id UUID NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
     
     -- COLUMNAS OBLIGATORIAS DE AUDITORÍA
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -115,6 +129,7 @@ CREATE TABLE IF NOT EXISTS public.tarjetas_estudio (
     estado_repaso VARCHAR(50) DEFAULT 'nuevo' NOT NULL CHECK (estado_repaso IN ('nuevo', 'repasando', 'dominado')),
     repasos_correctos INT DEFAULT 0 NOT NULL,
     proximo_repaso DATE,
+    estudiante_id UUID NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
     
     -- COLUMNAS OBLIGATORIAS DE AUDITORÍA
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -187,9 +202,9 @@ ALTER TABLE public.laboratorios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tareas_laboratorio ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tarjetas_estudio ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Permitir acceso completo a usuarios autenticados" ON public.usuarios FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Permitir acceso completo a materias" ON public.materias FOR ALL USING (true);
-CREATE POLICY "Permitir acceso completo a trabajos_practicos" ON public.trabajos_practicos FOR ALL USING (true);
-CREATE POLICY "Permitir acceso completo a laboratorios" ON public.laboratorios FOR ALL USING (true);
-CREATE POLICY "Permitir acceso completo a tareas_laboratorio" ON public.tareas_laboratorio FOR ALL USING (true);
-CREATE POLICY "Permitir acceso completo a tarjetas_estudio" ON public.tarjetas_estudio FOR ALL USING (true);
+CREATE POLICY "Permitir acceso completo a usuarios autenticados" ON public.usuarios FOR ALL USING (auth.uid() = id);
+CREATE POLICY "Permitir acceso completo a materias" ON public.materias FOR ALL USING (auth.uid() = estudiante_id);
+CREATE POLICY "Permitir acceso completo a trabajos_practicos" ON public.trabajos_practicos FOR ALL USING (auth.uid() = estudiante_id);
+CREATE POLICY "Permitir acceso completo a laboratorios" ON public.laboratorios FOR ALL USING (auth.uid() = estudiante_id);
+CREATE POLICY "Permitir acceso completo a tareas_laboratorio" ON public.tareas_laboratorio FOR ALL USING (auth.uid() = estudiante_id);
+CREATE POLICY "Permitir acceso completo a tarjetas_estudio" ON public.tarjetas_estudio FOR ALL USING (auth.uid() = estudiante_id);
