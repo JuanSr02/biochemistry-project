@@ -23,16 +23,16 @@ export default function DashboardLayout({
         {children}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-20 flex h-16 border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 md:hidden">
-        <Link href="/dashboard/calculadora" className="flex flex-1 flex-col items-center justify-center text-xs font-medium text-slate-500 transition-colors hover:text-emerald-600 active:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-500">
+      <nav className="fixed bottom-0 left-0 right-0 z-20 flex border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-900 md:hidden">
+        <Link href="/dashboard/calculadora" className="flex h-16 flex-1 flex-col items-center justify-center text-xs font-medium text-slate-500 transition-colors hover:text-emerald-600 active:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-500">
           <span className="mb-1 text-lg">⚖️</span>
           ChemCalc
         </Link>
-        <Link href="/dashboard/academico" className="flex flex-1 flex-col items-center justify-center text-xs font-medium text-slate-500 transition-colors hover:text-emerald-600 active:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-500">
+        <Link href="/dashboard/academico" className="flex h-16 flex-1 flex-col items-center justify-center text-xs font-medium text-slate-500 transition-colors hover:text-emerald-600 active:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-500">
           <span className="mb-1 text-lg">📚</span>
           BioTrack
         </Link>
-        <Link href="/dashboard/flashcards" className="flex flex-1 flex-col items-center justify-center text-xs font-medium text-slate-500 transition-colors hover:text-emerald-600 active:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-500">
+        <Link href="/dashboard/flashcards" className="flex h-16 flex-1 flex-col items-center justify-center text-xs font-medium text-slate-500 transition-colors hover:text-emerald-600 active:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-500">
           <span className="mb-1 text-lg">🧠</span>
           BioFlash
         </Link>
