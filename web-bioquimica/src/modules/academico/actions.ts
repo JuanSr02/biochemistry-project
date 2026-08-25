@@ -160,11 +160,11 @@ export async function getMaterias(estudianteId?: string): Promise<{ success: boo
         return { success: true, data: data as Materia[] };
       }
       if (error) {
-        console.error("Supabase error en getMaterias:", error);
+
         return { success: false, error: error.message, data: [] };
       }
     } catch (e: any) {
-      console.error("Fetch error en getMaterias:", e);
+
       return { success: false, error: e.message || "Error de red", data: [] };
     }
   }
@@ -204,16 +204,15 @@ export async function crearMateria(
         return { success: true, data: data as Materia };
       }
       if (error) {
-        console.error("Supabase error en crearMateria:", error);
+
         return { success: false, error: error.message };
       }
     } catch (e: any) {
-      console.error("Fetch error en crearMateria:", e);
+
       return { success: false, error: e.message || "Error de red" };
     }
   }
 
-  // Fallback Mock
   const nuevaMateria: Materia = {
     id: `mat-${Date.now()}`,
     nombre: input.nombre.trim(),
@@ -289,7 +288,6 @@ export async function getTrabajosPracticos(estudianteId?: string): Promise<{ suc
         return { success: true, data: formatted as TrabajoPractico[] };
       }
     } catch {
-      // Fallback
     }
   }
 
@@ -332,16 +330,15 @@ export async function crearTrabajoPractico(
         };
       }
       if (error) {
-        console.error("Supabase error en crearTrabajoPractico:", error);
+
         return { success: false, error: error.message };
       }
     } catch (e: any) {
-      console.error("Fetch error en crearTrabajoPractico:", e);
+
       return { success: false, error: e.message || "Error de red" };
     }
   }
 
-  // Fallback Mock
   const materia = MOCK_MATERIAS.find((m) => m.id === input.materia_id);
   const nuevoTP: TrabajoPractico = {
     id: `tp-${Date.now()}`,
@@ -377,7 +374,6 @@ export async function cambiarEstadoTP(
 
       if (!error) return { success: true };
     } catch {
-      // Fallback
     }
   }
 
@@ -452,7 +448,6 @@ export async function getLaboratorios(estudianteId?: string): Promise<{ success:
         return { success: true, data: formatted };
       }
     } catch {
-      // Fallback
     }
   }
 
@@ -521,16 +516,15 @@ export async function crearLaboratorio(
         };
       }
       if (labError) {
-        console.error("Supabase error en crearLaboratorio:", labError);
+
         return { success: false, error: labError.message };
       }
     } catch (e: any) {
-      console.error("Fetch error en crearLaboratorio:", e);
+
       return { success: false, error: e.message || "Error de red" };
     }
   }
 
-  // Fallback Mock
   const materia = MOCK_MATERIAS.find((m) => m.id === input.materia_id);
   const labId = `lab-${Date.now()}`;
 
@@ -592,11 +586,9 @@ export async function toggleTareaLaboratorio(
         return { success: true };
       }
     } catch {
-      // Fallback
     }
   }
 
-  // Fallback Mock
   const lab = MOCK_LABORATORIOS.find((l) => l.id === laboratorioId);
   if (lab) {
     const tarea = lab.tareas.find((t) => t.id === tareaId);
@@ -626,7 +618,6 @@ export async function cambiarEstadoLaboratorio(
         .eq("id", id);
       if (!error) return { success: true };
     } catch {
-      // Fallback
     }
   }
 

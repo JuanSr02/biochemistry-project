@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, User, ShieldCheck } from "lucide-react";
+import { cerrarSesionAccion } from "@/modules/auth/actions";
 
 interface UsuarioSesion {
   id: string;
@@ -51,8 +52,9 @@ export function UserMenu() {
     return partes[0].substring(0, 2).toUpperCase();
   };
 
-  const handleCerrarSesion = () => {
+  const handleCerrarSesion = async () => {
     localStorage.removeItem("biotools_user");
+    await cerrarSesionAccion();
     router.push("/auth/login");
   };
 

@@ -1,9 +1,13 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
-export default function Home() {
-  // Más adelante aquí verificaremos si existe una sesión en Supabase
-  // Si existe sesión -> redirect('/dashboard')
-  // Si no existe -> redirect('/auth/login')
+export default async function Home() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get("biotools_session");
   
-  redirect("/auth/login");
+  if (session?.value) {
+    redirect("/dashboard");
+  } else {
+    redirect("/auth/login");
+  }
 }

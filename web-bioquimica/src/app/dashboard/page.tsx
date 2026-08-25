@@ -4,8 +4,6 @@ import Link from "next/link";
 export default function DashboardPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
-      
-      {/* Saludo */}
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
           Panel de Bioquímica
@@ -15,10 +13,7 @@ export default function DashboardPage() {
         </p>
       </header>
 
-      {/* Grid de Módulos */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
-        
-        {/* Módulo 1: ChemCalc */}
         <Link href="/dashboard/calculadora" className="block transition-transform active:scale-[0.98]">
           <Card className="h-full rounded-lg border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-emerald-600 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500">
             <CardHeader className="pb-3">
@@ -37,7 +32,6 @@ export default function DashboardPage() {
           </Card>
         </Link>
 
-        {/* Módulo 2: BioTrack */}
         <Link href="/dashboard/academico" className="block transition-transform active:scale-[0.98]">
           <Card className="h-full rounded-lg border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-emerald-600 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500">
             <CardHeader className="pb-3">
@@ -56,7 +50,6 @@ export default function DashboardPage() {
           </Card>
         </Link>
 
-        {/* Módulo 3: BioFlash */}
         <Link href="/dashboard/flashcards" className="block transition-transform active:scale-[0.98]">
           <Card className="h-full rounded-lg border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-emerald-600 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500">
             <CardHeader className="pb-3">
@@ -77,7 +70,6 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* Widget de Vencimientos (Nivel 1 de elevación) */}
       <section className="mt-8 pt-4">
         <h2 className="mb-4 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50">
           Próximas entregas

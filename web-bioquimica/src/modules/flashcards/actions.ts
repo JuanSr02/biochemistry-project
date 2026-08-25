@@ -88,7 +88,6 @@ export async function getTarjetasEstudio(estudianteId?: string): Promise<{ succe
         return { success: true, data: formatted as TarjetaEstudio[] };
       }
     } catch {
-      // Fallback
     }
   }
 
@@ -139,11 +138,9 @@ export async function registrarRespuestaFlashcard(
         };
       }
     } catch {
-      // Fallback
     }
   }
 
-  // Fallback Mock
   const card = MOCK_FLASHCARDS.find((c) => c.id === id);
   if (!card) return { success: false, error: "Tarjeta no encontrada." };
 
@@ -194,11 +191,9 @@ export async function crearFlashcard(
         };
       }
     } catch {
-      // Fallback
     }
   }
 
-  // Fallback Mock
   let materiaNombre = "Bioquímica General";
   if (input.materia_id) {
       const { data: materias } = await getMaterias();
@@ -257,11 +252,9 @@ export async function actualizarFlashcard(
         };
       }
     } catch {
-      // Fallback
     }
   }
 
-  // Fallback Mock
   const card = MOCK_FLASHCARDS.find((c) => c.id === id);
   if (!card) return { success: false, error: "Tarjeta no encontrada." };
 
@@ -291,11 +284,9 @@ export async function eliminarFlashcard(id: string): Promise<{ success: boolean;
         .eq("id", id);
       if (!error) return { success: true };
     } catch {
-      // Fallback
     }
   }
 
-  // Fallback Mock
   const index = MOCK_FLASHCARDS.findIndex((c) => c.id === id);
   if (index === -1) return { success: false, error: "Tarjeta no encontrada." };
   

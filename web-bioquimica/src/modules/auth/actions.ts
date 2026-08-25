@@ -1,6 +1,7 @@
 "use server";
 
 import { supabase, isSupabaseConfigured } from "@/core/lib/supabase";
+import { cookies } from "next/headers";
 
 export async function iniciarSesion(email: string, password: string) {
   if (!email || !password) {
@@ -25,30 +26,46 @@ export async function iniciarSesion(email: string, password: string) {
       const userEmail = data.user?.email || email;
       const nombre = data.user?.user_metadata?.nombre_completo || userEmail.split("@")[0];
 
+      const userObj = {
+        id: data.user?.id || "usr-1",
+        email: userEmail,
+        nombre: nombre,
+      };
+
+      const cookieStore = await cookies();
+      cookieStore.set("biotools_session", JSON.stringify(userObj), { 
+        maxAge: 60 * 60 * 24 * 30, 
+        path: "/",
+        sameSite: "lax",
+      });
+
       return {
         success: true,
-        user: {
-          id: data.user?.id || "usr-1",
-          email: userEmail,
-          nombre: nombre,
-        },
+        user: userObj,
       };
     } catch {
-      // Fallback si ocurre error de red
     }
   }
 
-  // Fallback demo local login si Supabase no está configurado
   const prefijo = email.split("@")[0];
   const nombreFormateado = prefijo.charAt(0).toUpperCase() + prefijo.slice(1);
 
+  const userObj = {
+    id: "usr-demo",
+    email: email.trim(),
+    nombre: nombreFormateado,
+  };
+
+  const cookieStore = await cookies();
+  cookieStore.set("biotools_session", JSON.stringify(userObj), { 
+    maxAge: 60 * 60 * 24 * 30, 
+    path: "/",
+    sameSite: "lax",
+  });
+
   return {
     success: true,
-    user: {
-      id: "usr-demo",
-      email: email.trim(),
-      nombre: nombreFormateado,
-    },
+    user: userObj,
   };
 }
 
@@ -81,7 +98,6 @@ export async function registrarUsuario(nombre: string, email: string, password: 
         return { success: false, error: mensaje };
       }
 
-      // Guardar también en la tabla pública de usuarios
       if (data.user) {
         await supabase.from("usuarios").insert({
           id: data.user.id,
@@ -91,27 +107,43 @@ export async function registrarUsuario(nombre: string, email: string, password: 
         });
       }
 
+      const userObj = {
+        id: data.user?.id || "usr-new",
+        email: email.trim(),
+        nombre: nombre.trim(),
+      };
+
+      const cookieStore = await cookies();
+      cookieStore.set("biotools_session", JSON.stringify(userObj), { 
+        maxAge: 60 * 60 * 24 * 30, 
+        path: "/",
+        sameSite: "lax",
+      });
+
       return {
         success: true,
-        user: {
-          id: data.user?.id || "usr-new",
-          email: email.trim(),
-          nombre: nombre.trim(),
-        },
+        user: userObj,
       };
     } catch {
-      // Fallback
     }
   }
 
-  // Fallback demo local
+  const userObj = {
+    id: `usr-${Date.now()}`,
+    email: email.trim(),
+    nombre: nombre.trim(),
+  };
+
+  const cookieStore = await cookies();
+  cookieStore.set("biotools_session", JSON.stringify(userObj), { 
+    maxAge: 60 * 60 * 24 * 30, 
+    path: "/",
+    sameSite: "lax",
+  });
+
   return {
     success: true,
-    user: {
-      id: `usr-${Date.now()}`,
-      email: email.trim(),
-      nombre: nombre.trim(),
-    },
+    user: userObj,
   };
 }
 
@@ -122,7 +154,6 @@ export async function actualizarPerfil(id: string, nombre: string) {
 
   if (isSupabaseConfigured()) {
     try {
-      // 1. Update in public.usuarios
       const { error: dbError } = await supabase
         .from("usuarios")
         .update({ nombre_completo: nombre.trim() })
@@ -132,12 +163,8 @@ export async function actualizarPerfil(id: string, nombre: string) {
         return { success: false, error: dbError.message };
       }
       
-      // We cannot easily update the Auth metadata from the client without the user being currently authenticated in the Supabase client session (which requires setting session). 
-      // But we will return success and let the client update its local state.
-      
       return { success: true };
     } catch {
-      // Fallback
     }
   }
 
@@ -147,8 +174,6 @@ export async function actualizarPerfil(id: string, nombre: string) {
 export async function eliminarCuenta(id: string) {
   if (isSupabaseConfigured()) {
     try {
-      // Delete from public.usuarios
-      // Note: Full auth user deletion requires Admin API, but deleting from public schema can cascade or at least remove their data if RLS allows.
       const { error } = await supabase
         .from("usuarios")
         .delete()
@@ -160,9 +185,22 @@ export async function eliminarCuenta(id: string) {
       
       return { success: true };
     } catch {
-      // Fallback
     }
   }
 
+  return { success: true };
+}
+
+export async function cerrarSesionAccion() {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+    }
+  }
+  
+  const cookieStore = await cookies();
+  cookieStore.delete("biotools_session");
+  
   return { success: true };
 }
