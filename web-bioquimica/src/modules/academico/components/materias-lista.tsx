@@ -22,7 +22,8 @@ export function MateriasLista({ materias, onRefresh }: MateriasListaProps) {
   const [nombre, setNombre] = useState("");
   const [codigo, setCodigo] = useState("");
   const [profesor, setProfesor] = useState("");
-  const [cuatrimestre, setCuatrimestre] = useState("1º Cuatrimestre 2026");
+  const [periodo, setPeriodo] = useState("1º Cuatrimestre");
+  const [anio, setAnio] = useState(new Date().getFullYear().toString());
   const [estado, setEstado] = useState<EstadoMateria>("cursando");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +46,9 @@ export function MateriasLista({ materias, onRefresh }: MateriasListaProps) {
     } catch (e) {
       // ignore
     }
+    const cuatrimestre = `${periodo} ${anio}`;
     const payload = { nombre, codigo, profesor, cuatrimestre, estado, estudiante_id };
-    
+
     let res;
     if (editandoId) {
       res = await actualizarMateria(editandoId, payload);
@@ -70,7 +72,14 @@ export function MateriasLista({ materias, onRefresh }: MateriasListaProps) {
     setNombre(mat.nombre);
     setCodigo(mat.codigo);
     setProfesor(mat.profesor || "");
-    setCuatrimestre(mat.cuatrimestre);
+    const parts = mat.cuatrimestre.split(" ");
+    if (parts.length >= 3) {
+      setPeriodo(`${parts[0]} ${parts[1]}`);
+      setAnio(parts[2]);
+    } else {
+      setPeriodo("1º Cuatrimestre");
+      setAnio(new Date().getFullYear().toString());
+    }
     setEstado(mat.estado);
     setEditandoId(mat.id);
     setMostrarForm(true);
@@ -175,6 +184,29 @@ export function MateriasLista({ materias, onRefresh }: MateriasListaProps) {
                     placeholder="Ej: Dr. Alberto Ginastera"
                     className="h-10 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800"
                   />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Periodo y Año
+                  </Label>
+                  <div className="flex gap-2">
+                    <select
+                      value={periodo}
+                      onChange={(e) => setPeriodo(e.target.value)}
+                      className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="1º Cuatrimestre">1º Cuatrimestre</option>
+                      <option value="2º Cuatrimestre">2º Cuatrimestre</option>
+                      <option value="Anual">Anual</option>
+                    </select>
+                    <Input
+                      type="number"
+                      value={anio}
+                      onChange={(e) => setAnio(e.target.value)}
+                      placeholder="Año"
+                      className="w-24 h-10 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="estado" className="text-xs font-semibold text-slate-700 dark:text-slate-300">

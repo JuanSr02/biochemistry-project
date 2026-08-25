@@ -191,9 +191,11 @@ export async function crearMateria(
           nombre: input.nombre.trim(),
           codigo: input.codigo.trim(),
           profesor: input.profesor?.trim() || null,
-          cuatrimestre: input.cuatrimestre.trim() || "1º Cuatrimestre 2026",
+          cuatrimestre: input.cuatrimestre.trim() || "1º Cuatrimestre",
           estado: input.estado,
           estudiante_id: input.estudiante_id,
+          created_by: input.estudiante_id,
+          updated_by: input.estudiante_id,
         })
         .select()
         .single();
@@ -217,7 +219,7 @@ export async function crearMateria(
     nombre: input.nombre.trim(),
     codigo: input.codigo.trim(),
     profesor: input.profesor?.trim() || undefined,
-    cuatrimestre: input.cuatrimestre.trim() || "1º Cuatrimestre 2026",
+    cuatrimestre: input.cuatrimestre.trim() || "1º Cuatrimestre",
     estado: input.estado,
     estudiante_id: input.estudiante_id,
     created_at: new Date().toISOString(),
@@ -233,7 +235,8 @@ export async function crearMateria(
 export async function actualizarMateria(id: string, input: import("./types").ActualizarMateriaInput): Promise<{ success: boolean; data?: Materia; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase.from("materias").update(input).eq("id", id).select().single();
+      const updatePayload = { ...input, updated_by: input.estudiante_id };
+      const { data, error } = await supabase.from("materias").update(updatePayload).eq("id", id).select().single();
       if (!error && data) return { success: true, data: data as Materia };
       if (error) return { success: false, error: error.message };
     } catch (e: any) {
@@ -316,6 +319,8 @@ export async function crearTrabajoPractico(
           estado: input.estado,
           calificacion: input.calificacion || null,
           estudiante_id: input.estudiante_id,
+          created_by: input.estudiante_id,
+          updated_by: input.estudiante_id,
         })
         .select("*, materias(nombre)")
         .single();
@@ -360,13 +365,14 @@ export async function crearTrabajoPractico(
 
 export async function cambiarEstadoTP(
   id: string,
-  nuevoEstado: EstadoTP
+  nuevoEstado: EstadoTP,
+  estudianteId?: string
 ): Promise<{ success: boolean; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
       const { error } = await supabase
         .from("trabajos_practicos")
-        .update({ estado: nuevoEstado })
+        .update({ estado: nuevoEstado, updated_by: estudianteId })
         .eq("id", id);
 
       if (!error) return { success: true };
@@ -386,7 +392,8 @@ export async function cambiarEstadoTP(
 export async function actualizarTrabajoPractico(id: string, input: import("./types").ActualizarTrabajoPracticoInput): Promise<{ success: boolean; data?: TrabajoPractico; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase.from("trabajos_practicos").update(input).eq("id", id).select("*, materias(nombre)").single();
+      const updatePayload = { ...input, updated_by: input.estudiante_id };
+      const { data, error } = await supabase.from("trabajos_practicos").update(updatePayload).eq("id", id).select("*, materias(nombre)").single();
       if (!error && data) return { success: true, data: { ...data, materia_nombre: (data as any).materias?.nombre || "General" } as TrabajoPractico };
       if (error) return { success: false, error: error.message };
     } catch (e: any) {
@@ -475,6 +482,8 @@ export async function crearLaboratorio(
           observaciones: input.observaciones?.trim() || null,
           estado: "pendiente",
           estudiante_id: input.estudiante_id,
+          created_by: input.estudiante_id,
+          updated_by: input.estudiante_id,
         })
         .select("*, materias(nombre)")
         .single();
@@ -489,6 +498,8 @@ export async function crearLaboratorio(
             completada: false,
             orden: idx + 1,
             estudiante_id: input.estudiante_id,
+            created_by: input.estudiante_id,
+            updated_by: input.estudiante_id,
           }));
 
         let tareasResult: TareaLaboratorio[] = [];
@@ -559,7 +570,8 @@ export async function crearLaboratorio(
 
 export async function toggleTareaLaboratorio(
   laboratorioId: string,
-  tareaId: string
+  tareaId: string,
+  estudianteId?: string
 ): Promise<{ success: boolean; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
@@ -574,7 +586,7 @@ export async function toggleTareaLaboratorio(
         // 2. Alternar
         await supabase
           .from("tareas_laboratorio")
-          .update({ completada: !tarea.completada })
+          .update({ completada: !tarea.completada, updated_by: estudianteId })
           .eq("id", tareaId);
 
         return { success: true };
@@ -603,13 +615,14 @@ export async function toggleTareaLaboratorio(
 
 export async function cambiarEstadoLaboratorio(
   id: string,
-  nuevoEstado: EstadoLaboratorio
+  nuevoEstado: EstadoLaboratorio,
+  estudianteId?: string
 ): Promise<{ success: boolean; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
       const { error } = await supabase
         .from("laboratorios")
-        .update({ estado: nuevoEstado })
+        .update({ estado: nuevoEstado, updated_by: estudianteId })
         .eq("id", id);
       if (!error) return { success: true };
     } catch {
@@ -633,6 +646,7 @@ export async function actualizarLaboratorio(id: string, input: import("./types")
       if (input.fecha) payload.fecha = input.fecha;
       if (input.observaciones !== undefined) payload.observaciones = input.observaciones?.trim() || null;
       if (input.materia_id) payload.materia_id = input.materia_id;
+      if (input.estudiante_id) payload.updated_by = input.estudiante_id;
 
       const { data, error } = await supabase.from("laboratorios").update(payload).eq("id", id).select("*, materias(nombre)").single();
       if (!error && data) return { success: true, data: { ...data, materia_nombre: (data as any).materias?.nombre || "General" } as Laboratorio };

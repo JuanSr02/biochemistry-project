@@ -106,8 +106,16 @@ export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
     setMostrarForm(false);
   };
 
+  const getEstudianteId = () => {
+    try {
+      const stored = localStorage.getItem("biotools_user");
+      if (stored) return JSON.parse(stored).id;
+    } catch (e) {}
+    return undefined;
+  };
+
   const handleCambiarEstado = async (id: string, nuevoEstado: EstadoTP) => {
-    await cambiarEstadoTP(id, nuevoEstado);
+    await cambiarEstadoTP(id, nuevoEstado, getEstudianteId());
     onRefresh();
   };
 
@@ -148,7 +156,7 @@ export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
         <Card className="border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/20 rounded-lg p-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <CardHeader className="p-0 pb-3">
             <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              {editandoId ? "Editar Trabajo Práctico" : "Registrar Trabajo Práctico de Laboratorio"}
+              {editandoId ? "Editar Trabajo Práctico" : "Registrar Trabajo Práctico"}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -180,7 +188,7 @@ export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
                     id="titulo"
                     value={titulo}
                     onChange={(e) => setTitulo(e.target.value)}
-                    placeholder="Ej: TP N° 4: Espectrofotometría"
+                    placeholder="Ej: TP N° 1: Introducción"
                     className="h-10 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800"
                     required
                   />
@@ -219,13 +227,13 @@ export function TpsLista({ tps, materias, onRefresh }: TpsListaProps) {
 
               <div className="space-y-1">
                 <Label htmlFor="descripcion" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Descripción u Objetivos del Protocolo
+                  Descripción u Objetivos
                 </Label>
                 <Input
                   id="descripcion"
                   value={descripcion}
                   onChange={(e) => setDescripcion(e.target.value)}
-                  placeholder="Detalles sobre reactivos, muestra o informe..."
+                  placeholder="Detalles sobre la actividad o informe..."
                   className="h-10 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800"
                 />
               </div>

@@ -23,12 +23,7 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
   const [titulo, setTitulo] = useState("");
   const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
   const [observaciones, setObservaciones] = useState("");
-  const [tareasIniciales, setTareasIniciales] = useState<string[]>([
-    "Armado de pipetas y calibración de pH-metro",
-    "Preparación de soluciones y muestras",
-    "Medición espectrofotométrica / Titulación",
-    "Limpieza y guardado de material de vidrio",
-  ]);
+  const [tareasIniciales, setTareasIniciales] = useState<string[]>([]);
   const [nuevaTareaTexto, setNuevaTareaTexto] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +73,8 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
         materia_id: payload.materia_id,
         titulo: payload.titulo,
         fecha: payload.fecha,
-        observaciones: payload.observaciones
+        observaciones: payload.observaciones,
+        estudiante_id: payload.estudiante_id
       });
     } else {
       res = await crearLaboratorio(payload);
@@ -121,18 +117,21 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
   const resetForm = () => {
     setTitulo("");
     setObservaciones("");
-    setTareasIniciales([
-      "Armado de pipetas y calibración de pH-metro",
-      "Preparación de soluciones y muestras",
-      "Medición espectrofotométrica / Titulación",
-      "Limpieza y guardado de material de vidrio",
-    ]);
+    setTareasIniciales([]);
     setEditandoId(null);
     setMostrarForm(false);
   };
 
+  const getEstudianteId = () => {
+    try {
+      const stored = localStorage.getItem("biotools_user");
+      if (stored) return JSON.parse(stored).id;
+    } catch (e) {}
+    return undefined;
+  };
+
   const handleToggleTarea = async (labId: string, tareaId: string) => {
-    await toggleTareaLaboratorio(labId, tareaId);
+    await toggleTareaLaboratorio(labId, tareaId, getEstudianteId());
     onRefresh();
   };
 
@@ -152,7 +151,7 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <FlaskConical className="w-5 h-5 text-emerald-600" />
-          Sesiones de Laboratorio ({laboratorios.length})
+          Laboratorios ({laboratorios.length})
         </h2>
         <Button
           onClick={() => {
@@ -173,10 +172,10 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
         <Card className="border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/20 rounded-lg p-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <CardHeader className="p-0 pb-3">
             <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              {editandoId ? "Editar Sesión de Laboratorio" : "Registrar Nueva Sesión de Laboratorio"}
+              {editandoId ? "Editar Laboratorio" : "Registrar Nuevo Laboratorio"}
             </CardTitle>
             <CardDescription className="text-xs text-slate-500">
-              {editandoId ? "Edita los detalles de la sesión." : "Define el protocolo práctico y el checklist de tareas obligatorias en mesada."}
+              {editandoId ? "Edita los detalles del laboratorio." : "Define el protocolo y la lista de tareas."}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -202,13 +201,13 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
 
                 <div className="space-y-1">
                   <Label htmlFor="titulo" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Título de la SesiónPráctica *
+                    Nombre laboratorio *
                   </Label>
                   <Input
                     id="titulo"
                     value={titulo}
                     onChange={(e) => setTitulo(e.target.value)}
-                    placeholder="Ej: Titulación Potenciométrica de Aminoácidos"
+                    placeholder="Ej: Análisis de muestras"
                     className="h-10 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800"
                     required
                   />
@@ -230,13 +229,13 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
 
                 <div className="space-y-1">
                   <Label htmlFor="observaciones" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Observaciones / Reactivos Específicos
+                    Observaciones / Materiales
                   </Label>
                   <Input
                     id="observaciones"
                     value={observaciones}
                     onChange={(e) => setObservaciones(e.target.value)}
-                    placeholder="Ej: Llevar pipeta automática P1000 y frasco lavador"
+                    placeholder="Ej: Llevar guardapolvo y guantes"
                     className="h-10 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800"
                   />
                 </div>
@@ -246,7 +245,7 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
               {!editandoId && (
               <div className="space-y-2 pt-2 border-t border-emerald-200/60 dark:border-emerald-900/60">
                 <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Tareas / Checklist de Mesada de Laboratorio
+                  Tareas del Laboratorio
                 </Label>
                 <div className="space-y-1.5">
                   {tareasIniciales.map((task, idx) => (
@@ -298,11 +297,10 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
         </Card>
       )}
 
-      {/* Grid de Tarjetas de Laboratorio */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {laboratorios.length === 0 ? (
           <Card className="col-span-2 p-8 text-center border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500">
-            No hay sesiones de laboratorio programadas.
+            No hay laboratorios programados.
           </Card>
         ) : (
           laboratorios.map((lab) => {
@@ -323,7 +321,7 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
                     <div className="flex gap-1 items-center">
                       <select
                         value={lab.estado}
-                        onChange={(e) => cambiarEstadoLaboratorio(lab.id, e.target.value as EstadoLaboratorio).then(onRefresh)}
+                        onChange={(e) => cambiarEstadoLaboratorio(lab.id, e.target.value as EstadoLaboratorio, getEstudianteId()).then(onRefresh)}
                         className="text-xs p-1 rounded border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none mr-1"
                       >
                         <option value="pendiente">Pendiente</option>
@@ -359,7 +357,7 @@ export function LaboratoriosLista({ laboratorios, materias, onRefresh }: Laborat
                   {/* Barra de Progreso */}
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-medium">
-                      <span>Checklist de Mesada</span>
+                      <span>Tareas</span>
                       <span>
                         {completadas} / {total} ({porcentaje}%)
                       </span>
