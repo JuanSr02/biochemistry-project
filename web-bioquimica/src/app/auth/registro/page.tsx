@@ -8,7 +8,7 @@ import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { registrarUsuario } from "@/modules/auth/actions";
 import Link from "next/link";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, UserPlus, ArrowRight } from "lucide-react";
 
 export default function RegistroPage() {
   const router = useRouter();
@@ -41,24 +41,41 @@ export default function RegistroPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-      <Card className="w-full max-w-sm border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-lg">
-        <CardHeader className="space-y-2 text-center p-6 pb-4">
-          <div className="mx-auto w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 mb-1">
-            <UserPlus className="w-6 h-6" />
+    <div className="relative flex min-h-screen items-center justify-center p-4 overflow-hidden">
+      {/* Background Image & Gradient Overlays */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-105"
+        style={{ backgroundImage: "url('/bg-login.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-bl from-emerald-900/80 via-emerald-950/90 to-slate-950/95 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]" />
+      </div>
+
+      {/* Decorative Blobs */}
+      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full mix-blend-screen filter blur-[100px] animate-pulse" />
+      <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-teal-500/20 rounded-full mix-blend-screen filter blur-[100px] animate-pulse delay-1000" />
+
+      <Card className="relative z-10 w-full max-w-md overflow-hidden border-white/10 bg-white/10 backdrop-blur-xl shadow-2xl dark:border-white/5 dark:bg-slate-950/40 rounded-3xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10 dark:from-white/10 dark:to-transparent pointer-events-none" />
+        
+        <CardHeader className="space-y-3 text-center p-8 pb-6 relative z-10">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-500 p-[1px] shadow-lg mb-2">
+            <div className="w-full h-full rounded-2xl bg-white/90 dark:bg-slate-900/90 flex items-center justify-center backdrop-blur-md">
+              <UserPlus className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+            </div>
           </div>
-          <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+          <CardTitle className="text-3xl font-bold tracking-tight text-white drop-shadow-md">
             BioTools Lab
           </CardTitle>
-          <CardDescription className="text-sm text-slate-500">
+          <CardDescription className="text-sm font-medium text-emerald-100/80 dark:text-emerald-200/70">
             Registro de Estudiante de Bioquímica
           </CardDescription>
         </CardHeader>
 
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4 p-6 pt-0">
+        <form onSubmit={handleSubmit} className="relative z-10">
+          <CardContent className="space-y-5 p-8 pt-0">
             <div className="space-y-2">
-              <Label htmlFor="nombre" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <Label htmlFor="nombre" className="text-sm font-medium text-white/90 ml-1">
                 Nombre Completo
               </Label>
               <Input
@@ -68,12 +85,12 @@ export default function RegistroPage() {
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Ej: Luciana Nievas"
                 required
-                className="rounded bg-white border-slate-200 focus-visible:ring-emerald-100 focus-visible:border-emerald-600 dark:bg-slate-900 dark:border-slate-800"
+                className="h-12 rounded-xl bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-emerald-400 focus-visible:border-emerald-400 backdrop-blur-md transition-all"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <Label htmlFor="email" className="text-sm font-medium text-white/90 ml-1">
                 Correo electrónico
               </Label>
               <Input
@@ -83,12 +100,12 @@ export default function RegistroPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="estudiante@bioquimica.edu.ar"
                 required
-                className="rounded bg-white border-slate-200 focus-visible:ring-emerald-100 focus-visible:border-emerald-600 dark:bg-slate-900 dark:border-slate-800"
+                className="h-12 rounded-xl bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-emerald-400 focus-visible:border-emerald-400 backdrop-blur-md transition-all"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <Label htmlFor="password" className="text-sm font-medium text-white/90 ml-1">
                 Contraseña
               </Label>
               <Input
@@ -97,31 +114,39 @@ export default function RegistroPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="rounded bg-white border-slate-200 focus-visible:ring-emerald-100 focus-visible:border-emerald-600 dark:bg-slate-900 dark:border-slate-800"
+                className="h-12 rounded-xl bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-emerald-400 focus-visible:border-emerald-400 backdrop-blur-md transition-all"
               />
             </div>
 
-            {error && <p className="text-xs text-rose-600 font-medium">{error}</p>}
+            {error && (
+              <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30 backdrop-blur-md">
+                <p className="text-sm text-red-200 font-medium text-center">{error}</p>
+              </div>
+            )}
           </CardContent>
 
-          <CardFooter className="flex flex-col space-y-4 p-6 pt-0">
+          <CardFooter className="flex flex-col space-y-5 p-8 pt-0">
             <Button
               type="submit"
               disabled={cargando}
-              className="w-full h-11 rounded bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-semibold"
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 transition-all font-bold text-base shadow-lg shadow-emerald-500/25 group border border-emerald-400/20"
             >
               {cargando ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
                   Creando Cuenta...
                 </>
               ) : (
-                "Crear Cuenta"
+                <>
+                  Crear Cuenta
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </>
               )}
             </Button>
-            <div className="text-xs text-center text-slate-500">
+            
+            <div className="text-sm text-center text-white/70">
               ¿Ya tienes cuenta?{" "}
-              <Link href="/auth/login" className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+              <Link href="/auth/login" className="font-semibold text-emerald-300 hover:text-white transition-colors drop-shadow-sm">
                 Inicia Sesión aquí
               </Link>
             </div>

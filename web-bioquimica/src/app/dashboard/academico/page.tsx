@@ -72,17 +72,17 @@ export default function AcademicoPage() {
         </div>
       ) : (
         <Tabs defaultValue="laboratorios" className="w-full">
-          <TabsList className="mb-4 flex-wrap sm:flex-nowrap">
-            <TabsTrigger value="laboratorios">
-              <FlaskConical className="w-4 h-4 mr-1.5" />
-              Laboratorios ({laboratorios.length})
+          <TabsList className="mb-6 flex h-auto w-full justify-start overflow-x-auto p-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <TabsTrigger value="laboratorios" className="flex-shrink-0 px-4 py-2 data-[state=active]:shadow-sm">
+              <FlaskConical className="w-4 h-4 mr-2 text-emerald-600 dark:text-emerald-400" />
+              Labs ({laboratorios.length})
             </TabsTrigger>
-            <TabsTrigger value="tps">
-              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
-              Trabajos Prácticos ({tps.length})
+            <TabsTrigger value="tps" className="flex-shrink-0 px-4 py-2 data-[state=active]:shadow-sm">
+              <FileSpreadsheet className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+              TPs ({tps.length})
             </TabsTrigger>
-            <TabsTrigger value="materias">
-              <BookOpen className="w-4 h-4 mr-1.5" />
+            <TabsTrigger value="materias" className="flex-shrink-0 px-4 py-2 data-[state=active]:shadow-sm">
+              <BookOpen className="w-4 h-4 mr-2 text-indigo-600 dark:text-indigo-400" />
               Materias ({materias.length})
             </TabsTrigger>
           </TabsList>
