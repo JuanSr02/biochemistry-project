@@ -166,12 +166,12 @@ export default function PerfilPage() {
             Zona de Peligro
           </CardTitle>
           <CardDescription className="text-rose-600/80 dark:text-rose-400/80">
-            Una vez elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate de estar seguro.
+            Una vez elimines tu cuenta, no hay vuelta atrás.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-slate-700 dark:text-slate-300 mb-4">
-            Esto eliminará permanentemente tu cuenta y removerá tus datos de nuestros servidores.
+            Esto eliminará permanentemente tu cuenta.
           </p>
           <Button 
             variant="destructive" 

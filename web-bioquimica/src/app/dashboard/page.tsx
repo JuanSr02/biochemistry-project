@@ -26,7 +26,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                Calculadora de soluciones, diluciones y conversión rápida de unidades volumétricas.
+                Calculadora Bioquímica.
               </p>
             </CardContent>
           </Card>
@@ -44,7 +44,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                Agenda de Trabajos Prácticos (TPs), fechas de entrega.
+                Agenda académica.
               </p>
             </CardContent>
           </Card>
@@ -62,7 +62,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                Tarjetas interactivas espaciadas para estudiar.
+                Tarjetas interactivas para estudiar.
               </p>
             </CardContent>
           </Card>

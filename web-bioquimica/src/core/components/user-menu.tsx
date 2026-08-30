@@ -84,9 +84,6 @@ export function UserMenu() {
             <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
               {usuario?.email || "estudiante@bioquimica.edu.ar"}
             </p>
-            <div className="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded w-fit">
-              <ShieldCheck className="w-3 h-3" /> Estudiante de Bioquímica
-            </div>
           </div>
           
           <button

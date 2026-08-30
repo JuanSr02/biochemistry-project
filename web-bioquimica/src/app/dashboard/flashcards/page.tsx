@@ -37,7 +37,7 @@ export default function FlashcardsPage() {
     }
     const res = await getTarjetasEstudio(userId);
     if (res.success) setTarjetas(res.data);
-    
+
     const resMaterias = await getMaterias(userId);
     if (resMaterias.success) setMaterias(resMaterias.data);
 
@@ -97,10 +97,10 @@ export default function FlashcardsPage() {
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl flex items-center gap-2">
           <Brain className="w-7 h-7 text-emerald-600" />
-          BioFlash — Repaso Espaciado de Bioquímica
+          BioFlash — Repaso de Estudio
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Memorización activa de vías metabólicas, enzimas, cinética y conceptos clave de examen.
+          Memorización activa de conceptos clave.
         </p>
       </div>
 
@@ -166,7 +166,7 @@ export default function FlashcardsPage() {
                   <Award className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-xs text-slate-500 block">Efectividad de Retención</span>
+                  <span className="text-xs text-slate-500 block">Porcentaje de conocimiento</span>
                   <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
                     {porcentajeDominio}%
                   </span>

@@ -58,10 +58,10 @@ export default function AcademicoPage() {
           <span className="text-slate-900 dark:text-slate-200 font-medium">BioTrack</span>
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
-          BioTrack — Gestión Académica y Laboratorios
+          BioTrack — Gestión Académica
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Control unificado de cursadas, trabajos prácticos, informes y protocolo de laboratorio en mesada.
+          Control unificado académico.
         </p>
       </div>
 
