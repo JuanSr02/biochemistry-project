@@ -1,64 +1,59 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, User, ShieldCheck } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { cerrarSesionAccion } from "@/modules/auth/actions";
+import { useAppStore } from "@/core/store/useAppStore";
 
-interface UsuarioSesion {
-  id: string;
-  email: string;
-  nombre: string;
+function obtenerIniciales(nombre: string) {
+  if (!nombre) return "B";
+  const partes = nombre.trim().split(" ");
+  if (partes.length >= 2) {
+    return (partes[0][0] + partes[1][0]).toUpperCase();
+  }
+  return partes[0].substring(0, 2).toUpperCase();
 }
 
 export function UserMenu() {
   const router = useRouter();
-  const [usuario, setUsuario] = useState<UsuarioSesion | null>(null);
-  const [menuAbierto, setMenuAbierto] = useState(false);
 
+  // ── Zustand: fuente de verdad global del usuario ────────────────────────
+  const { usuario, setUsuario, sidebarOpen, setSidebarOpen, clearUsuario } = useAppStore();
+
+  // Hidratación inicial desde localStorage (una sola vez, en el cliente)
   useEffect(() => {
-    const cargarUsuario = () => {
-      try {
-        const guardado = localStorage.getItem("biotools_user");
-        if (guardado) {
-          setUsuario(JSON.parse(guardado));
-        } else {
-          setUsuario({
-            id: "usr-default",
-            email: "luciana@bioquimica.edu.ar",
-            nombre: "Luciana Gómez",
-          });
-        }
-      } catch {
+    if (usuario) return; // Ya hidratado
+    try {
+      const guardado = localStorage.getItem("biotools_user");
+      if (guardado) {
+        setUsuario(JSON.parse(guardado));
+      } else {
         setUsuario({
           id: "usr-default",
-          email: "estudiante@bioquimica.edu.ar",
-          nombre: "Estudiante Bioquímica",
+          email: "luciana@bioquimica.edu.ar",
+          nombre: "Luciana Gómez",
         });
       }
-    };
-    
-    cargarUsuario();
-    window.addEventListener("storage", cargarUsuario);
-    return () => window.removeEventListener("storage", cargarUsuario);
-  }, []);
-
-  const obtenerIniciales = (nombre: string) => {
-    if (!nombre) return "B";
-    const partes = nombre.trim().split(" ");
-    if (partes.length >= 2) {
-      return (partes[0][0] + partes[1][0]).toUpperCase();
+    } catch {
+      setUsuario({
+        id: "usr-default",
+        email: "estudiante@bioquimica.edu.ar",
+        nombre: "Estudiante Bioquímica",
+      });
     }
-    return partes[0].substring(0, 2).toUpperCase();
-  };
+  }, [usuario, setUsuario]);
 
   const handleCerrarSesion = async () => {
+    clearUsuario();
     localStorage.removeItem("biotools_user");
     await cerrarSesionAccion();
     router.push("/auth/login");
   };
 
   const iniciales = usuario ? obtenerIniciales(usuario.nombre) : "B";
+  const menuAbierto = sidebarOpen;
+  const setMenuAbierto = setSidebarOpen;
 
   return (
     <div className="relative">
@@ -85,7 +80,7 @@ export function UserMenu() {
               {usuario?.email || "estudiante@bioquimica.edu.ar"}
             </p>
           </div>
-          
+
           <button
             type="button"
             onClick={() => {

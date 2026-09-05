@@ -1,58 +1,25 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/core/components/ui/tabs";
 import { MateriasLista } from "@/modules/academico/components/materias-lista";
 import { TpsLista } from "@/modules/academico/components/tps-lista";
 import { LaboratoriosLista } from "@/modules/academico/components/laboratorios-lista";
-import { getMaterias, getTrabajosPracticos, getLaboratorios } from "@/modules/academico/actions";
-import { Materia, TrabajoPractico, Laboratorio } from "@/modules/academico/types";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, FileSpreadsheet, FlaskConical, Loader2 } from "lucide-react";
-import { useAcademicoStore } from "@/modules/academico/store/useAcademicoStore";
+import { ArrowLeft, BookOpen, FileSpreadsheet, FlaskConical, Loader2, AlertCircle } from "lucide-react";
 import { useMaterias } from "@/modules/academico/hooks/useMaterias";
+import { useTps } from "@/modules/academico/hooks/useTps";
+import { useLaboratorios } from "@/modules/academico/hooks/useLaboratorios";
 
 export default function AcademicoPage() {
-  // Estado con Zustand
-  const { semestreActual, setSemestreActual } = useAcademicoStore();
-  
-  // Caché con React Query
-  const { data: materiasRq, isLoading: loadingRq } = useMaterias();
+  // ── React Query: los 3 recursos se cargan en paralelo ──────────────────
+  const { data: materias = [], isLoading: loadingMaterias } = useMaterias();
+  const { data: tps = [], isLoading: loadingTps } = useTps();
+  const { data: laboratorios = [], isLoading: loadingLabs } = useLaboratorios();
 
-  const [materias, setMaterias] = useState<Materia[]>([]);
-  const [tps, setTps] = useState<TrabajoPractico[]>([]);
-  const [laboratorios, setLaboratorios] = useState<Laboratorio[]>([]);
-  const [loading, setLoading] = useState(true);
+  const loading = loadingMaterias || loadingTps || loadingLabs;
 
-  const cargarDatos = useCallback(async () => {
-    setLoading(true);
-    let userId: string | undefined = undefined;
-    try {
-      const stored = localStorage.getItem("biotools_user");
-      if (stored) {
-        const user = JSON.parse(stored);
-        userId = user.id;
-      }
-    } catch (e) {
-      // ignore
-    }
-
-    const [resMat, resTps, resLabs] = await Promise.all([
-      getMaterias(userId),
-      getTrabajosPracticos(userId),
-      getLaboratorios(userId),
-    ]);
-
-    if (resMat.success) setMaterias(resMat.data);
-    if (resTps.success) setTps(resTps.data);
-    if (resLabs.success) setLaboratorios(resLabs.data);
-
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    cargarDatos();
-  }, [cargarDatos]);
+  // Ya no necesitamos onRefresh: las mutations invalidan el caché automáticamente.
+  // Los sub-componentes reciben los datos directamente via props.
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
@@ -96,15 +63,16 @@ export default function AcademicoPage() {
           </TabsList>
 
           <TabsContent value="laboratorios">
-            <LaboratoriosLista laboratorios={laboratorios} materias={materias} onRefresh={cargarDatos} />
+            {/* onRefresh ya no se necesita — las mutations invalidan el caché */}
+            <LaboratoriosLista laboratorios={laboratorios} materias={materias} onRefresh={() => {}} />
           </TabsContent>
 
           <TabsContent value="tps">
-            <TpsLista tps={tps} materias={materias} onRefresh={cargarDatos} />
+            <TpsLista tps={tps} materias={materias} onRefresh={() => {}} />
           </TabsContent>
 
           <TabsContent value="materias">
-            <MateriasLista materias={materias} onRefresh={cargarDatos} />
+            <MateriasLista materias={materias} onRefresh={() => {}} />
           </TabsContent>
         </Tabs>
       )}

@@ -1,55 +1,44 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/core/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/core/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/core/components/ui/card";
 import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
-import { iniciarSesion } from "@/modules/auth/actions";
 import Link from "next/link";
 import { Loader2, FlaskConical, ArrowRight } from "lucide-react";
-import { useAuthStore } from "@/modules/auth/store/useAuthStore";
-import { useUser } from "@/modules/auth/hooks/useUser";
+import { useLoginMutation } from "@/modules/auth/hooks/useLoginMutation";
 
 export default function LoginPage() {
-  // Estado con Zustand
-  const { isModalOpen, setModalOpen } = useAuthStore();
-  
-  // Caché con React Query
-  const { data: userRq, isLoading: loadingUserRq } = useUser();
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  // ── useMutation para iniciar sesión ────────────────────────────────────
+  // Integra Zustand + localStorage + redirección automáticamente
+  const loginMutation = useLoginMutation();
+
+  const errorMsg =
+    loginMutation.data && !loginMutation.data.success
+      ? loginMutation.data.error
+      : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Por favor completa tu correo y contraseña.");
-      return;
-    }
-
-    setCargando(true);
-    setError(null);
-
-    const res = await iniciarSesion(email, password);
-
-    setCargando(false);
-
-    if (res.success && res.user) {
-      localStorage.setItem("biotools_user", JSON.stringify(res.user));
-      router.push("/dashboard");
-    } else {
-      setError(res.error || "No se pudo iniciar sesión. Verifica tus credenciales.");
-    }
+    if (!email || !password) return;
+    loginMutation.mutate({ email, password });
   };
 
   return (
     <div className="relative flex min-h-screen items-center justify-center p-4 overflow-hidden">
       {/* Background Image & Gradient Overlays */}
-      <div 
+      <div
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-105"
         style={{ backgroundImage: "url('/bg-login.jpg')" }}
       >
@@ -63,7 +52,7 @@ export default function LoginPage() {
 
       <Card className="relative z-10 w-full max-w-md overflow-hidden border-white/10 bg-white/10 backdrop-blur-xl shadow-2xl dark:border-white/5 dark:bg-slate-950/40 rounded-3xl">
         <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10 dark:from-white/10 dark:to-transparent pointer-events-none" />
-        
+
         <CardHeader className="space-y-3 text-center p-8 pb-6 relative z-10">
           <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-500 p-[1px] shadow-lg mb-2">
             <div className="w-full h-full rounded-2xl bg-white/90 dark:bg-slate-900/90 flex items-center justify-center backdrop-blur-md">
@@ -109,9 +98,9 @@ export default function LoginPage() {
               />
             </div>
 
-            {error && (
+            {errorMsg && (
               <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30 backdrop-blur-md">
-                <p className="text-sm text-red-200 font-medium text-center">{error}</p>
+                <p className="text-sm text-red-200 font-medium text-center">{errorMsg}</p>
               </div>
             )}
           </CardContent>
@@ -119,10 +108,10 @@ export default function LoginPage() {
           <CardFooter className="flex flex-col space-y-5 p-8 pt-0">
             <Button
               type="submit"
-              disabled={cargando}
+              disabled={loginMutation.isPending}
               className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 transition-all font-bold text-base shadow-lg shadow-emerald-500/25 group border border-emerald-400/20"
             >
-              {cargando ? (
+              {loginMutation.isPending ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin mr-2" />
                   Iniciando Sesión...
@@ -134,10 +123,13 @@ export default function LoginPage() {
                 </>
               )}
             </Button>
-            
+
             <div className="text-sm text-center text-white/70">
               ¿No tienes cuenta?{" "}
-              <Link href="/auth/registro" className="font-semibold text-emerald-300 hover:text-white transition-colors drop-shadow-sm">
+              <Link
+                href="/auth/registro"
+                className="font-semibold text-emerald-300 hover:text-white transition-colors drop-shadow-sm"
+              >
                 Regístrate aquí
               </Link>
             </div>

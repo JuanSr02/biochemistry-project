@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 interface AuthState {
+  /** true si el modal de bienvenida/confirmación está abierto */
   isModalOpen: boolean;
   setModalOpen: (isOpen: boolean) => void;
 }

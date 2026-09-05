@@ -1,102 +1,79 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getTarjetasEstudio, registrarRespuestaFlashcard } from "@/modules/flashcards/actions";
-import { getMaterias } from "@/modules/academico/actions";
-import { TarjetaEstudio } from "@/modules/flashcards/types";
-import { Materia } from "@/modules/academico/types";
+import { useState } from "react";
+import { useTarjetas } from "@/modules/flashcards/hooks/useTarjetas";
+import { useFlashcardMutations } from "@/modules/flashcards/hooks/useFlashcardMutations";
+import { useFlashcardsStore } from "@/modules/flashcards/store/useFlashcardsStore";
+import { useMaterias } from "@/modules/academico/hooks/useMaterias";
 import { FlashcardItem } from "@/modules/flashcards/components/flashcard-item";
 import { FlashcardsLista } from "@/modules/flashcards/components/flashcards-lista";
 import { Card, CardContent } from "@/core/components/ui/card";
 import { Button } from "@/core/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/core/components/ui/tabs";
 import Link from "next/link";
-import { ArrowLeft, Brain, RotateCw, CheckCircle2, Award, BookOpen, Settings } from "lucide-react";
-import { useFlashcardsStore } from "@/modules/flashcards/store/useFlashcardsStore";
-import { useMazos } from "@/modules/flashcards/hooks/useMazos";
+import {
+  ArrowLeft,
+  Brain,
+  RotateCw,
+  CheckCircle2,
+  Award,
+  BookOpen,
+  Settings,
+  Loader2,
+} from "lucide-react";
 
 export default function FlashcardsPage() {
-  // Estado con Zustand
-  const { mazoActivo, setMazoActivo, modoEstudio, setModoEstudio } = useFlashcardsStore();
-  
-  // Caché con React Query
-  const { data: mazosRq, isLoading: loadingMazosRq } = useMazos();
-  const [tarjetas, setTarjetas] = useState<TarjetaEstudio[]>([]);
-  const [materias, setMaterias] = useState<Materia[]>([]);
-  const [filtroMateria, setFiltroMateria] = useState<string>("todas");
-  const [indexActual, setIndexActual] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [aciertos, setAciertos] = useState(0);
-  const [errores, setErrores] = useState(0);
-  const [refreshToggle, setRefreshToggle] = useState(false);
+  // ── React Query: datos del servidor con caché ──────────────────────────
+  const { data: tarjetas = [], isLoading: loadingTarjetas } = useTarjetas();
+  const { data: materias = [], isLoading: loadingMaterias } = useMaterias();
+  const { responder } = useFlashcardMutations();
 
-  const fetchTarjetas = async () => {
-    setLoading(true);
-    let userId: string | undefined = undefined;
-    try {
-      const stored = localStorage.getItem("biotools_user");
-      if (stored) {
-        const user = JSON.parse(stored);
-        userId = user.id;
-      }
-    } catch (e) {
-      // ignore
-    }
-    const res = await getTarjetasEstudio(userId);
-    if (res.success) setTarjetas(res.data);
+  // ── Zustand: todo el estado efímero de la sesión de repaso ─────────────
+  const {
+    mazoActivo,
+    indexActual,
+    stats,
+    setMazoActivo,
+    registrarAcierto,
+    registrarError,
+    avanzarTarjeta,
+    reiniciarSesion,
+  } = useFlashcardsStore();
 
-    const resMaterias = await getMaterias(userId);
-    if (resMaterias.success) setMaterias(resMaterias.data);
+  const loading = loadingTarjetas || loadingMaterias;
 
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchTarjetas();
-  }, [refreshToggle]);
-
-  const handleUpdate = () => {
-    setRefreshToggle(prev => !prev);
-  };
-
-  const tarjetasFiltradas = filtroMateria === "todas" ? tarjetas : tarjetas.filter(t => t.materia_id === filtroMateria);
+  // Filtrado de tarjetas según el mazo activo
+  const tarjetasFiltradas =
+    mazoActivo === "todas" ? tarjetas : tarjetas.filter((t) => t.materia_id === mazoActivo);
   const tarjetaActual = tarjetasFiltradas[indexActual];
 
   const handleResponder = async (sabias: boolean) => {
     if (!tarjetaActual) return;
 
-    if (sabias) {
-      setAciertos((prev) => prev + 1);
-    } else {
-      setErrores((prev) => prev + 1);
-    }
+    // 1. Registrar en Zustand (actualización inmediata de la UI)
+    if (sabias) registrarAcierto();
+    else registrarError();
 
-    await registrarRespuestaFlashcard(tarjetaActual.id, sabias);
+    // 2. Persistir en el servidor via useMutation (invalida caché automáticamente)
+    responder.mutate({ id: tarjetaActual.id, sabias });
 
-    // Avanzar a la siguiente tarjeta
-    if (indexActual < tarjetasFiltradas.length - 1) {
-      setIndexActual((prev) => prev + 1);
-    } else {
-      // Reiniciar ciclo
-      setIndexActual(0);
-    }
+    // 3. Avanzar a la siguiente tarjeta
+    avanzarTarjeta(tarjetasFiltradas.length);
   };
 
-  const reiniciarSesion = () => {
-    setIndexActual(0);
-    setAciertos(0);
-    setErrores(0);
-  };
-
-  const totalRespondidas = aciertos + errores;
-  const porcentajeDominio = totalRespondidas > 0 ? Math.round((aciertos / totalRespondidas) * 100) : 0;
+  const totalRespondidas = stats.aciertos + stats.errores;
+  const porcentajeDominio =
+    totalRespondidas > 0 ? Math.round((stats.aciertos / totalRespondidas) * 100) : 0;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
-          <Link href="/dashboard" className="hover:text-emerald-600 flex items-center gap-1 transition-colors">
+          <Link
+            href="/dashboard"
+            className="hover:text-emerald-600 flex items-center gap-1 transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" /> Inicio
           </Link>
           <span>/</span>
@@ -111,110 +88,134 @@ export default function FlashcardsPage() {
         </p>
       </div>
 
-      <div className="flex items-center gap-2 max-w-sm">
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">Mazo:</span>
-        <select
-          value={filtroMateria}
-          onChange={(e) => {
-            setFiltroMateria(e.target.value);
-            reiniciarSesion();
-          }}
-          className="w-full h-9 px-3 rounded-md border border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        >
-          <option value="todas">Todos los Mazos</option>
-          {materias.map(m => (
-            <option key={m.id} value={m.id}>{m.nombre}</option>
-          ))}
-        </select>
-      </div>
-
-      <Tabs defaultValue="repaso" className="w-full">
-        <TabsList className="mb-6 inline-flex h-10 items-center justify-center rounded-md bg-slate-100 p-1 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-          <TabsTrigger value="repaso" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300 dark:data-[state=active]:bg-slate-950 dark:data-[state=active]:text-slate-50">
-            <RotateCw className="w-4 h-4 mr-2" /> Sesión de Repaso
-          </TabsTrigger>
-          <TabsTrigger value="gestion" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300 dark:data-[state=active]:bg-slate-950 dark:data-[state=active]:text-slate-50">
-            <Settings className="w-4 h-4 mr-2" /> Gestión de Mazo
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="repaso" className="space-y-6">
-          {/* Widget de Métricas de Repaso */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-xs text-slate-500 block">Respuestas Correctas</span>
-                  <span className="text-xl font-bold text-slate-900 dark:text-slate-100">{aciertos}</span>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600">
-                  <BookOpen className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-xs text-slate-500 block">Progreso Mazo</span>
-                  <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                    {tarjetasFiltradas.length > 0 ? `${indexActual + 1} / ${tarjetasFiltradas.length}` : "0"}
-                  </span>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600">
-                  <Award className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-xs text-slate-500 block">Porcentaje de conocimiento</span>
-                  <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                    {porcentajeDominio}%
-                  </span>
-                </div>
-              </div>
-            </Card>
+      {loading ? (
+        <div className="flex items-center justify-center p-12 text-slate-500">
+          <Loader2 className="w-6 h-6 animate-spin mr-2 text-emerald-600" />
+          Cargando mazos de estudio...
+        </div>
+      ) : (
+        <>
+          {/* Selector de Mazo */}
+          <div className="flex items-center gap-2 max-w-sm">
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+              Mazo:
+            </span>
+            <select
+              value={mazoActivo}
+              onChange={(e) => setMazoActivo(e.target.value)}
+              className="w-full h-9 px-3 rounded-md border border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="todas">Todos los Mazos</option>
+              {materias.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Área del Tarjetero Interactivo */}
-          {loading ? (
-            <Card className="p-12 text-center text-slate-500">Cargando mazo de estudio...</Card>
-          ) : tarjetaActual ? (
-            <div className="space-y-4 pt-2">
-              <FlashcardItem tarjeta={tarjetaActual} onResponder={handleResponder} />
+          <Tabs defaultValue="repaso" className="w-full">
+            <TabsList className="mb-6 inline-flex h-10 items-center justify-center rounded-md bg-slate-100 p-1 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+              <TabsTrigger
+                value="repaso"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300 dark:data-[state=active]:bg-slate-950 dark:data-[state=active]:text-slate-50"
+              >
+                <RotateCw className="w-4 h-4 mr-2" /> Sesión de Repaso
+              </TabsTrigger>
+              <TabsTrigger
+                value="gestion"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300 dark:data-[state=active]:bg-slate-950 dark:data-[state=active]:text-slate-50"
+              >
+                <Settings className="w-4 h-4 mr-2" /> Gestión de Mazo
+              </TabsTrigger>
+            </TabsList>
 
-              <div className="flex justify-center pt-2">
-                <Button
-                  onClick={reiniciarSesion}
-                  variant="outline"
-                  className="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
-                >
-                  <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Reiniciar Sesión de Estudo
-                </Button>
+            <TabsContent value="repaso" className="space-y-6">
+              {/* Métricas de Sesión — vienen de Zustand */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600">
+                      <CheckCircle2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs text-slate-500 block">Respuestas Correctas</span>
+                      <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                        {stats.aciertos}
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600">
+                      <BookOpen className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs text-slate-500 block">Progreso Mazo</span>
+                      <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                        {tarjetasFiltradas.length > 0
+                          ? `${indexActual + 1} / ${tarjetasFiltradas.length}`
+                          : "0"}
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600">
+                      <Award className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs text-slate-500 block">% Conocimiento</span>
+                      <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                        {porcentajeDominio}%
+                      </span>
+                    </div>
+                  </div>
+                </Card>
               </div>
-            </div>
-          ) : (
-            <Card className="p-10 text-center space-y-3 border-slate-200 dark:border-slate-800">
-              <p className="text-base font-semibold text-slate-700 dark:text-slate-200">
-                ¡Has completado todas las tarjetas del mazo o no hay tarjetas disponibles!
-              </p>
-              <Button onClick={reiniciarSesion} className="bg-emerald-600 text-white hover:bg-emerald-700">
-                Comenzar nueva ronda
-              </Button>
-            </Card>
-          )}
-        </TabsContent>
 
-        <TabsContent value="gestion" className="space-y-6">
-          <FlashcardsLista tarjetas={tarjetasFiltradas} materias={materias} onUpdate={handleUpdate} />
-        </TabsContent>
-      </Tabs>
+              {tarjetaActual ? (
+                <div className="space-y-4 pt-2">
+                  <FlashcardItem tarjeta={tarjetaActual} onResponder={handleResponder} />
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      onClick={reiniciarSesion}
+                      variant="outline"
+                      className="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+                    >
+                      <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Reiniciar Sesión de Estudio
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Card className="p-10 text-center space-y-3 border-slate-200 dark:border-slate-800">
+                  <p className="text-base font-semibold text-slate-700 dark:text-slate-200">
+                    ¡Has completado todas las tarjetas del mazo o no hay tarjetas disponibles!
+                  </p>
+                  <Button
+                    onClick={reiniciarSesion}
+                    className="bg-emerald-600 text-white hover:bg-emerald-700"
+                  >
+                    Comenzar nueva ronda
+                  </Button>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="gestion" className="space-y-6">
+              <FlashcardsLista
+                tarjetas={tarjetasFiltradas}
+                materias={materias}
+                onUpdate={() => {}}
+              />
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
     </div>
   );
 }

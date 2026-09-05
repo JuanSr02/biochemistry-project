@@ -1,39 +1,47 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/core/components/ui/card";
-import { calcularDilucion } from "../actions";
-import { DilucionResultado } from "../types";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/core/components/ui/card";
 import { ResultadoCard } from "./resultado-card";
 import { Loader2 } from "lucide-react";
+import { useCalcularDilucion } from "../hooks/useCalcularSolucion";
+import { useCalculadoraStore } from "../store/useCalculadoraStore";
 
-const dilucionSchema = z.object({
-  concentracionInicial: z.coerce
-    .number({ invalid_type_error: "Debe ingresar un número válido" })
-    .positive("La concentración madre C1 debe ser mayor a 0"),
-  concentracionFinal: z.coerce
-    .number({ invalid_type_error: "Debe ingresar un número válido" })
-    .positive("La concentración deseada C2 debe ser mayor a 0"),
-  volumenFinalMl: z.coerce
-    .number({ invalid_type_error: "Debe ingresar un número válido" })
-    .positive("El volumen final V2 debe ser mayor a 0"),
-}).refine((data) => data.concentracionFinal < data.concentracionInicial, {
-  message: "La concentración final (C2) debe ser menor a la concentración madre (C1)",
-  path: ["concentracionFinal"],
-});
+const dilucionSchema = z
+  .object({
+    concentracionInicial: z.coerce
+      .number({ invalid_type_error: "Debe ingresar un número válido" })
+      .positive("La concentración madre C1 debe ser mayor a 0"),
+    concentracionFinal: z.coerce
+      .number({ invalid_type_error: "Debe ingresar un número válido" })
+      .positive("La concentración deseada C2 debe ser mayor a 0"),
+    volumenFinalMl: z.coerce
+      .number({ invalid_type_error: "Debe ingresar un número válido" })
+      .positive("El volumen final V2 debe ser mayor a 0"),
+  })
+  .refine((data) => data.concentracionFinal < data.concentracionInicial, {
+    message: "La concentración final (C2) debe ser menor a la concentración madre (C1)",
+    path: ["concentracionFinal"],
+  });
 
 type DilucionFormValues = z.infer<typeof dilucionSchema>;
 
 export function DilucionForm() {
-  const [resultado, setResultado] = useState<DilucionResultado | null>(null);
-  const [errorServer, setErrorServer] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // ── useMutation: llama al server action y guarda en Zustand automáticamente
+  const calcularMutation = useCalcularDilucion();
+  // ── Zustand: lee el último resultado (actualizado por la mutation)
+  const ultimoResultado = useCalculadoraStore((s) => s.ultimoResultadoDilucion);
 
   const {
     register,
@@ -48,19 +56,8 @@ export function DilucionForm() {
     },
   });
 
-  const onSubmit = async (data: DilucionFormValues) => {
-    setIsLoading(true);
-    setErrorServer(null);
-    setResultado(null);
-
-    const res = await calcularDilucion(data);
-    setIsLoading(false);
-
-    if (res.success && res.data) {
-      setResultado(res.data);
-    } else {
-      setErrorServer(res.error || "Error al realizar el cálculo de dilución.");
-    }
+  const onSubmit = (data: DilucionFormValues) => {
+    calcularMutation.mutate(data);
   };
 
   return (
@@ -71,7 +68,8 @@ export function DilucionForm() {
             <span>🧪</span> Calculadora de Diluciones (C1 · V1 = C2 · V2)
           </CardTitle>
           <CardDescription className="text-sm text-slate-500 dark:text-slate-400">
-            Calcula la alícuota requerida de la solución madre y el volumen de solvente para obtener la concentración deseada.
+            Calcula la alícuota requerida de la solución madre y el volumen de solvente para
+            obtener la concentración deseada.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -79,7 +77,10 @@ export function DilucionForm() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* C1 */}
               <div className="space-y-1.5">
-                <Label htmlFor="concentracionInicial" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="concentracionInicial"
+                  className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                >
                   Concentración Madre (C1) *
                 </Label>
                 <Input
@@ -91,13 +92,18 @@ export function DilucionForm() {
                   className="rounded h-11 bg-white border-slate-200 focus-visible:ring-emerald-100 focus-visible:border-emerald-600 dark:bg-slate-900 dark:border-slate-800"
                 />
                 {errors.concentracionInicial && (
-                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{errors.concentracionInicial.message}</p>
+                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                    {errors.concentracionInicial.message}
+                  </p>
                 )}
               </div>
 
               {/* C2 */}
               <div className="space-y-1.5">
-                <Label htmlFor="concentracionFinal" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="concentracionFinal"
+                  className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                >
                   Concentración Deseada (C2) *
                 </Label>
                 <Input
@@ -109,13 +115,18 @@ export function DilucionForm() {
                   className="rounded h-11 bg-white border-slate-200 focus-visible:ring-emerald-100 focus-visible:border-emerald-600 dark:bg-slate-900 dark:border-slate-800"
                 />
                 {errors.concentracionFinal && (
-                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{errors.concentracionFinal.message}</p>
+                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                    {errors.concentracionFinal.message}
+                  </p>
                 )}
               </div>
 
               {/* V2 */}
               <div className="space-y-1.5">
-                <Label htmlFor="volumenFinalMl" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="volumenFinalMl"
+                  className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                >
                   Volumen Final Deseado (V2 en mL) *
                 </Label>
                 <Input
@@ -127,26 +138,29 @@ export function DilucionForm() {
                   className="rounded h-11 bg-white border-slate-200 focus-visible:ring-emerald-100 focus-visible:border-emerald-600 dark:bg-slate-900 dark:border-slate-800"
                 />
                 {errors.volumenFinalMl && (
-                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{errors.volumenFinalMl.message}</p>
+                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                    {errors.volumenFinalMl.message}
+                  </p>
                 )}
               </div>
             </div>
 
-            {errorServer && (
+            {/* Error del servidor via mutation */}
+            {calcularMutation.data && !calcularMutation.data.success && (
               <div className="p-3 text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200 rounded-md dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900">
-                {errorServer}
+                {calcularMutation.data.error}
               </div>
             )}
 
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={calcularMutation.isPending}
               className="w-full h-11 rounded bg-emerald-600 text-white hover:bg-emerald-700 font-semibold transition-colors mt-2"
             >
-              {isLoading ? (
+              {calcularMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Calculando en Servidor...
+                  Calculando...
                 </>
               ) : (
                 "Calcular Volúmenes V1 y Solvente"
@@ -156,7 +170,8 @@ export function DilucionForm() {
         </CardContent>
       </Card>
 
-      {resultado && <ResultadoCard tipo="dilucion" resultadoDilucion={resultado} />}
+      {/* Resultado: viene del store de Zustand */}
+      {ultimoResultado && <ResultadoCard tipo="dilucion" resultadoDilucion={ultimoResultado} />}
     </div>
   );
 }

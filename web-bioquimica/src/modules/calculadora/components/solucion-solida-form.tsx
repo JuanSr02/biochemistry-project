@@ -1,17 +1,22 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/core/components/ui/card";
-import { calcularSolucionSolida } from "../actions";
-import { SolucionSolidaResultado } from "../types";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/core/components/ui/card";
 import { ResultadoCard } from "./resultado-card";
 import { Loader2 } from "lucide-react";
+import { useCalcularSolucionSolida } from "../hooks/useCalcularSolucion";
+import { useCalculadoraStore } from "../store/useCalculadoraStore";
 
 const solucionSolidaSchema = z.object({
   volumenMl: z.coerce
@@ -32,9 +37,10 @@ const solucionSolidaSchema = z.object({
 type SolucionSolidaFormValues = z.infer<typeof solucionSolidaSchema>;
 
 export function SolucionSolidaForm() {
-  const [resultado, setResultado] = useState<SolucionSolidaResultado | null>(null);
-  const [errorServer, setErrorServer] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // ── useMutation: llama al server action y guarda en Zustand automáticamente
+  const calcularMutation = useCalcularSolucionSolida();
+  // ── Zustand: lee el último resultado (actualizado por la mutation)
+  const ultimoResultado = useCalculadoraStore((s) => s.ultimoResultadoSolida);
 
   const {
     register,
@@ -45,24 +51,13 @@ export function SolucionSolidaForm() {
     defaultValues: {
       volumenMl: 500,
       concentracionMolar: 0.1,
-      pesoMolecular: 58.44, // NaOH / NaCl aprox
+      pesoMolecular: 58.44,
       purezaPorcentaje: 100,
     },
   });
 
-  const onSubmit = async (data: SolucionSolidaFormValues) => {
-    setIsLoading(true);
-    setErrorServer(null);
-    setResultado(null);
-
-    const res = await calcularSolucionSolida(data);
-    setIsLoading(false);
-
-    if (res.success && res.data) {
-      setResultado(res.data);
-    } else {
-      setErrorServer(res.error || "Error al realizar el cálculo.");
-    }
+  const onSubmit = (data: SolucionSolidaFormValues) => {
+    calcularMutation.mutate(data);
   };
 
   return (
@@ -73,7 +68,8 @@ export function SolucionSolidaForm() {
             <span>⚖️</span> Preparación de Solución a partir de Soluto Sólido
           </CardTitle>
           <CardDescription className="text-sm text-slate-500 dark:text-slate-400">
-            Calcula los gramos necesarios a pesar en balanza analítica en función de la molaridad, volumen y pureza.
+            Calcula los gramos necesarios a pesar en balanza analítica en función de la molaridad,
+            volumen y pureza.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -81,7 +77,10 @@ export function SolucionSolidaForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Volumen (mL) */}
               <div className="space-y-1.5">
-                <Label htmlFor="volumenMl" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="volumenMl"
+                  className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                >
                   Volumen deseado (mL) *
                 </Label>
                 <Input
@@ -93,13 +92,18 @@ export function SolucionSolidaForm() {
                   className="rounded h-11 bg-white border-slate-200 focus-visible:ring-emerald-100 focus-visible:border-emerald-600 dark:bg-slate-900 dark:border-slate-800"
                 />
                 {errors.volumenMl && (
-                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{errors.volumenMl.message}</p>
+                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                    {errors.volumenMl.message}
+                  </p>
                 )}
               </div>
 
               {/* Concentración (Molar) */}
               <div className="space-y-1.5">
-                <Label htmlFor="concentracionMolar" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="concentracionMolar"
+                  className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                >
                   Concentración (Molar - M) *
                 </Label>
                 <Input
@@ -111,13 +115,18 @@ export function SolucionSolidaForm() {
                   className="rounded h-11 bg-white border-slate-200 focus-visible:ring-emerald-100 focus-visible:border-emerald-600 dark:bg-slate-900 dark:border-slate-800"
                 />
                 {errors.concentracionMolar && (
-                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{errors.concentracionMolar.message}</p>
+                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                    {errors.concentracionMolar.message}
+                  </p>
                 )}
               </div>
 
               {/* Peso Molecular (g/mol) */}
               <div className="space-y-1.5">
-                <Label htmlFor="pesoMolecular" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="pesoMolecular"
+                  className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                >
                   Peso Molecular (g/mol) *
                 </Label>
                 <Input
@@ -129,13 +138,18 @@ export function SolucionSolidaForm() {
                   className="rounded h-11 bg-white border-slate-200 focus-visible:ring-emerald-100 focus-visible:border-emerald-600 dark:bg-slate-900 dark:border-slate-800"
                 />
                 {errors.pesoMolecular && (
-                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{errors.pesoMolecular.message}</p>
+                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                    {errors.pesoMolecular.message}
+                  </p>
                 )}
               </div>
 
               {/* Pureza (%) */}
               <div className="space-y-1.5">
-                <Label htmlFor="purezaPorcentaje" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="purezaPorcentaje"
+                  className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                >
                   Pureza del Reactivo (%) *
                 </Label>
                 <Input
@@ -147,26 +161,29 @@ export function SolucionSolidaForm() {
                   className="rounded h-11 bg-white border-slate-200 focus-visible:ring-emerald-100 focus-visible:border-emerald-600 dark:bg-slate-900 dark:border-slate-800"
                 />
                 {errors.purezaPorcentaje && (
-                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{errors.purezaPorcentaje.message}</p>
+                  <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                    {errors.purezaPorcentaje.message}
+                  </p>
                 )}
               </div>
             </div>
 
-            {errorServer && (
+            {/* Error del servidor via mutation */}
+            {calcularMutation.data && !calcularMutation.data.success && (
               <div className="p-3 text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200 rounded-md dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900">
-                {errorServer}
+                {calcularMutation.data.error}
               </div>
             )}
 
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={calcularMutation.isPending}
               className="w-full h-11 rounded bg-emerald-600 text-white hover:bg-emerald-700 font-semibold transition-colors mt-2"
             >
-              {isLoading ? (
+              {calcularMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Calculando en Servidor...
+                  Calculando...
                 </>
               ) : (
                 "Calcular Masa Requerida"
@@ -176,7 +193,8 @@ export function SolucionSolidaForm() {
         </CardContent>
       </Card>
 
-      {resultado && <ResultadoCard tipo="solida" resultadoSolida={resultado} />}
+      {/* Resultado: viene del store de Zustand */}
+      {ultimoResultado && <ResultadoCard tipo="solida" resultadoSolida={ultimoResultado} />}
     </div>
   );
 }

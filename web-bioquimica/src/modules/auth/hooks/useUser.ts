@@ -9,7 +9,7 @@ const fetchUser = async () => {
 
 export const useUser = () => {
   return useQuery({
-    queryKey: queryKeys.auth.user,
+    queryKey: queryKeys.auth.user(),
     queryFn: fetchUser,
   });
 };

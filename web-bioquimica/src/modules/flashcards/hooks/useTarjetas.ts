@@ -4,10 +4,9 @@ import { getTarjetasEstudio } from '../actions';
 import { useAppStore } from '@/core/store/useAppStore';
 
 /**
- * @deprecated Usar useTarjetas de '@/modules/flashcards/hooks/useTarjetas'
- * Este archivo se mantiene por compatibilidad con imports anteriores.
+ * Hook para obtener tarjetas de estudio del usuario autenticado.
  */
-export const useMazos = () => {
+export function useTarjetas() {
   const usuario = useAppStore((s) => s.usuario);
   const userId = usuario?.id;
 
@@ -17,4 +16,4 @@ export const useMazos = () => {
     select: (res) => (res.success ? res.data : []),
     staleTime: 5 * 60 * 1000,
   });
-};
+}
