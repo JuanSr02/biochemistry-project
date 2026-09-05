@@ -9,8 +9,16 @@ import { getMaterias, getTrabajosPracticos, getLaboratorios } from "@/modules/ac
 import { Materia, TrabajoPractico, Laboratorio } from "@/modules/academico/types";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, FileSpreadsheet, FlaskConical, Loader2 } from "lucide-react";
+import { useAcademicoStore } from "@/modules/academico/store/useAcademicoStore";
+import { useMaterias } from "@/modules/academico/hooks/useMaterias";
 
 export default function AcademicoPage() {
+  // Estado con Zustand
+  const { semestreActual, setSemestreActual } = useAcademicoStore();
+  
+  // Caché con React Query
+  const { data: materiasRq, isLoading: loadingRq } = useMaterias();
+
   const [materias, setMaterias] = useState<Materia[]>([]);
   const [tps, setTps] = useState<TrabajoPractico[]>([]);
   const [laboratorios, setLaboratorios] = useState<Laboratorio[]>([]);

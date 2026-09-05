@@ -9,8 +9,15 @@ import { Label } from "@/core/components/ui/label";
 import { iniciarSesion } from "@/modules/auth/actions";
 import Link from "next/link";
 import { Loader2, FlaskConical, ArrowRight } from "lucide-react";
+import { useAuthStore } from "@/modules/auth/store/useAuthStore";
+import { useUser } from "@/modules/auth/hooks/useUser";
 
 export default function LoginPage() {
+  // Estado con Zustand
+  const { isModalOpen, setModalOpen } = useAuthStore();
+  
+  // Caché con React Query
+  const { data: userRq, isLoading: loadingUserRq } = useUser();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

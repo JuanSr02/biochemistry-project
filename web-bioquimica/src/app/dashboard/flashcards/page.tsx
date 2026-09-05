@@ -12,8 +12,15 @@ import { Button } from "@/core/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/core/components/ui/tabs";
 import Link from "next/link";
 import { ArrowLeft, Brain, RotateCw, CheckCircle2, Award, BookOpen, Settings } from "lucide-react";
+import { useFlashcardsStore } from "@/modules/flashcards/store/useFlashcardsStore";
+import { useMazos } from "@/modules/flashcards/hooks/useMazos";
 
 export default function FlashcardsPage() {
+  // Estado con Zustand
+  const { mazoActivo, setMazoActivo, modoEstudio, setModoEstudio } = useFlashcardsStore();
+  
+  // Caché con React Query
+  const { data: mazosRq, isLoading: loadingMazosRq } = useMazos();
   const [tarjetas, setTarjetas] = useState<TarjetaEstudio[]>([]);
   const [materias, setMaterias] = useState<Materia[]>([]);
   const [filtroMateria, setFiltroMateria] = useState<string>("todas");

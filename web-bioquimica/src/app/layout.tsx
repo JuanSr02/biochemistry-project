@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "@/core/components/theme-provider";
 import { InstallPrompt } from "@/core/components/install-prompt";
+import { QueryProvider } from "@/core/providers/query-provider";
 import "./globals.css";
 
 // 2. Configuramos la fuente y su variable CSS
@@ -41,15 +42,17 @@ export default function RootLayout({
     // 3. Inyectamos la variable de la fuente en el HTML
     <html lang="es" className={`${geistSans.variable}`} suppressHydrationWarning>
       <body className="antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <InstallPrompt />
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <InstallPrompt />
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

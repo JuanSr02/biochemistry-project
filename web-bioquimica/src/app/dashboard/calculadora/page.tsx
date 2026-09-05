@@ -5,8 +5,15 @@ import { SolucionSolidaForm } from "@/modules/calculadora/components/solucion-so
 import { DilucionForm } from "@/modules/calculadora/components/dilucion-form";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { useCalculadoraStore } from "@/modules/calculadora/store/useCalculadoraStore";
+import { useHistorial } from "@/modules/calculadora/hooks/useHistorial";
 
 export default function CalculadoraPage() {
+  // Estado con Zustand
+  const { modoAvanzado, toggleModoAvanzado } = useCalculadoraStore();
+  
+  // Caché con React Query
+  const { data: historial, isLoading: loadingHistorial } = useHistorial();
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
       {/* Header con botón de retorno */}
