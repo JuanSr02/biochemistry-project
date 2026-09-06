@@ -29,6 +29,8 @@ import {
   generateOfflineId,
 } from "@/core/lib/indexed-db";
 import { syncManager } from "@/core/lib/sync-manager";
+import { createClient } from "@/core/lib/supabase/client";
+import { isSupabaseConfigured } from "@/core/lib/supabase/utils";
 import type {
   Materia,
   TrabajoPractico,
@@ -58,19 +60,29 @@ function now(): string {
 export async function offlineGetMaterias(
   estudianteId?: string
 ): Promise<{ success: boolean; data: Materia[]; error?: string }> {
-  if (isOnline()) {
+  if (isOnline() && isSupabaseConfigured()) {
     try {
-      const result = await remoteActions.getMaterias(estudianteId);
-      if (result.success && result.data.length > 0) {
-        // Persistir en IDB para próximo uso offline
-        await idbPutMaterias(result.data);
+      const supabase = createClient();
+      let query = supabase.from("materias").select("*");
+      if (estudianteId) {
+        query = query.eq("estudiante_id", estudianteId);
       }
-      return result;
+      const { data, error } = await query.order("created_at", { ascending: false });
+
+      if (!error && data) {
+        if (data.length > 0) {
+          await idbPutMaterias(data as Materia[]);
+        }
+        return { success: true, data: data as Materia[] };
+      }
     } catch {
-      // Caer en IDB si la red falla
+      // Caer en IDB si la red o Supabase falla
     }
   }
   const data = await idbGetMaterias(estudianteId);
+  if (data.length === 0 && !isSupabaseConfigured()) {
+    return remoteActions.getMaterias(estudianteId);
+  }
   return { success: true, data };
 }
 
@@ -177,18 +189,33 @@ export async function offlineEliminarMateria(
 export async function offlineGetTps(
   estudianteId?: string
 ): Promise<{ success: boolean; data: TrabajoPractico[]; error?: string }> {
-  if (isOnline()) {
+  if (isOnline() && isSupabaseConfigured()) {
     try {
-      const result = await remoteActions.getTrabajosPracticos(estudianteId);
-      if (result.success && result.data.length > 0) {
-        await idbPutTps(result.data);
+      const supabase = createClient();
+      let query = supabase.from("trabajos_practicos").select("*, materias(nombre)");
+      if (estudianteId) {
+        query = query.eq("estudiante_id", estudianteId);
       }
-      return result;
+      const { data, error } = await query.order("fecha_entrega", { ascending: true });
+
+      if (!error && data) {
+        const formatted = data.map((item: any) => ({
+          ...item,
+          materia_nombre: item.materias?.nombre || "General",
+        }));
+        if (formatted.length > 0) {
+          await idbPutTps(formatted as TrabajoPractico[]);
+        }
+        return { success: true, data: formatted as TrabajoPractico[] };
+      }
     } catch {
       // fallback IDB
     }
   }
   const data = await idbGetTps(estudianteId);
+  if (data.length === 0 && !isSupabaseConfigured()) {
+    return remoteActions.getTrabajosPracticos(estudianteId);
+  }
   return { success: true, data };
 }
 
@@ -316,18 +343,34 @@ export async function offlineEliminarTp(
 export async function offlineGetLaboratorios(
   estudianteId?: string
 ): Promise<{ success: boolean; data: Laboratorio[]; error?: string }> {
-  if (isOnline()) {
+  if (isOnline() && isSupabaseConfigured()) {
     try {
-      const result = await remoteActions.getLaboratorios(estudianteId);
-      if (result.success && result.data.length > 0) {
-        await idbPutLaboratorios(result.data);
+      const supabase = createClient();
+      let query = supabase.from("laboratorios").select("*, materias(nombre), tareas_laboratorio(*)");
+      if (estudianteId) {
+        query = query.eq("estudiante_id", estudianteId);
       }
-      return result;
+      const { data, error } = await query.order("fecha", { ascending: true });
+
+      if (!error && data) {
+        const formatted = data.map((lab: any) => ({
+          ...lab,
+          materia_nombre: lab.materias?.nombre || "Bioquímica General",
+          tareas: (lab.tareas_laboratorio || []).sort((a: any, b: any) => a.orden - b.orden),
+        }));
+        if (formatted.length > 0) {
+          await idbPutLaboratorios(formatted as Laboratorio[]);
+        }
+        return { success: true, data: formatted as Laboratorio[] };
+      }
     } catch {
       // fallback IDB
     }
   }
   const data = await idbGetLaboratorios(estudianteId);
+  if (data.length === 0 && !isSupabaseConfigured()) {
+    return remoteActions.getLaboratorios(estudianteId);
+  }
   return { success: true, data };
 }
 

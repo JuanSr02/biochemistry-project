@@ -1,6 +1,7 @@
 "use server";
 
-import { supabase, isSupabaseConfigured } from "@/core/lib/supabase";
+import { createClient } from "@/core/lib/supabase/server";
+import { isSupabaseConfigured } from "@/core/lib/supabase/utils";
 import { cookies } from "next/headers";
 
 export async function iniciarSesion(email: string, password: string) {
@@ -10,6 +11,7 @@ export async function iniciarSesion(email: string, password: string) {
 
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -32,6 +34,7 @@ export async function iniciarSesion(email: string, password: string) {
         nombre: nombre,
       };
 
+      // Guardamos la cookie de la app temporalmente para el modo demo, aunque Supabase ya guardó la suya
       const cookieStore = await cookies();
       cookieStore.set("biotools_session", JSON.stringify(userObj), { 
         maxAge: 60 * 60 * 24 * 30, 
@@ -44,6 +47,7 @@ export async function iniciarSesion(email: string, password: string) {
         user: userObj,
       };
     } catch {
+      return { success: false, error: "Error inesperado al iniciar sesión." };
     }
   }
 
@@ -80,6 +84,7 @@ export async function registrarUsuario(nombre: string, email: string, password: 
 
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -125,6 +130,7 @@ export async function registrarUsuario(nombre: string, email: string, password: 
         user: userObj,
       };
     } catch {
+      return { success: false, error: "Error inesperado al registrar usuario." };
     }
   }
 
@@ -154,6 +160,7 @@ export async function actualizarPerfil(id: string, nombre: string) {
 
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { error: dbError } = await supabase
         .from("usuarios")
         .update({ nombre_completo: nombre.trim() })
@@ -165,6 +172,7 @@ export async function actualizarPerfil(id: string, nombre: string) {
       
       return { success: true };
     } catch {
+      return { success: false, error: "Error inesperado." };
     }
   }
 
@@ -174,6 +182,7 @@ export async function actualizarPerfil(id: string, nombre: string) {
 export async function eliminarCuenta(id: string) {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { error } = await supabase
         .from("usuarios")
         .delete()
@@ -185,6 +194,7 @@ export async function eliminarCuenta(id: string) {
       
       return { success: true };
     } catch {
+      return { success: false, error: "Error inesperado." };
     }
   }
 
@@ -194,8 +204,10 @@ export async function eliminarCuenta(id: string) {
 export async function cerrarSesionAccion() {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       await supabase.auth.signOut();
     } catch {
+      // Ignorar error
     }
   }
   

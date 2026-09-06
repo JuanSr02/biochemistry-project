@@ -1,6 +1,7 @@
 "use server";
 
-import { supabase, isSupabaseConfigured } from "@/core/lib/supabase";
+import { createClient } from "@/core/lib/supabase/server";
+import { isSupabaseConfigured } from "@/core/lib/supabase/utils";
 import {
   Materia,
   TrabajoPractico,
@@ -150,6 +151,7 @@ let MOCK_LABORATORIOS: Laboratorio[] = [
 export async function getMaterias(estudianteId?: string): Promise<{ success: boolean; data: Materia[]; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       let query = supabase.from("materias").select("*");
       if (estudianteId) {
         query = query.eq("estudiante_id", estudianteId);
@@ -171,7 +173,7 @@ export async function getMaterias(estudianteId?: string): Promise<{ success: boo
 
   let materiasResult = [...MOCK_MATERIAS];
   if (estudianteId) {
-    materiasResult = materiasResult.filter(m => m.estudiante_id === estudianteId);
+    materiasResult = materiasResult.filter(m => !m.estudiante_id || m.estudiante_id === estudianteId);
   }
   return { success: true, data: materiasResult };
 }
@@ -185,6 +187,7 @@ export async function crearMateria(
 
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { data, error } = await supabase
         .from("materias")
         .insert({
@@ -234,6 +237,7 @@ export async function crearMateria(
 export async function actualizarMateria(id: string, input: import("./types").ActualizarMateriaInput): Promise<{ success: boolean; data?: Materia; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const updatePayload = { ...input, updated_by: input.estudiante_id };
       const { data, error } = await supabase.from("materias").update(updatePayload).eq("id", id).select().single();
       if (!error && data) return { success: true, data: data as Materia };
@@ -253,6 +257,7 @@ export async function actualizarMateria(id: string, input: import("./types").Act
 export async function eliminarMateria(id: string): Promise<{ success: boolean; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { error } = await supabase.from("materias").delete().eq("id", id);
       if (!error) return { success: true };
       return { success: false, error: error.message };
@@ -274,6 +279,7 @@ export async function eliminarMateria(id: string): Promise<{ success: boolean; e
 export async function getTrabajosPracticos(estudianteId?: string): Promise<{ success: boolean; data: TrabajoPractico[]; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       let query = supabase.from("trabajos_practicos").select("*, materias(nombre)");
       if (estudianteId) {
         query = query.eq("estudiante_id", estudianteId);
@@ -293,7 +299,7 @@ export async function getTrabajosPracticos(estudianteId?: string): Promise<{ suc
 
   let tpsResult = [...MOCK_TRABAJOS_PRACTICOS];
   if (estudianteId) {
-    tpsResult = tpsResult.filter(t => t.estudiante_id === estudianteId);
+    tpsResult = tpsResult.filter(t => !t.estudiante_id || t.estudiante_id === estudianteId);
   }
   return { success: true, data: tpsResult };
 }
@@ -307,6 +313,7 @@ export async function crearTrabajoPractico(
 
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { data, error } = await supabase
         .from("trabajos_practicos")
         .insert({
@@ -367,6 +374,7 @@ export async function cambiarEstadoTP(
 ): Promise<{ success: boolean; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { error } = await supabase
         .from("trabajos_practicos")
         .update({ estado: nuevoEstado, updated_by: estudianteId })
@@ -388,6 +396,7 @@ export async function cambiarEstadoTP(
 export async function actualizarTrabajoPractico(id: string, input: import("./types").ActualizarTrabajoPracticoInput): Promise<{ success: boolean; data?: TrabajoPractico; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const updatePayload = { ...input, updated_by: input.estudiante_id };
       const { data, error } = await supabase.from("trabajos_practicos").update(updatePayload).eq("id", id).select("*, materias(nombre)").single();
       if (!error && data) return { success: true, data: { ...data, materia_nombre: (data as any).materias?.nombre || "General" } as TrabajoPractico };
@@ -412,6 +421,7 @@ export async function actualizarTrabajoPractico(id: string, input: import("./typ
 export async function eliminarTrabajoPractico(id: string): Promise<{ success: boolean; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { error } = await supabase.from("trabajos_practicos").delete().eq("id", id);
       if (!error) return { success: true };
       return { success: false, error: error.message };
@@ -433,6 +443,7 @@ export async function eliminarTrabajoPractico(id: string): Promise<{ success: bo
 export async function getLaboratorios(estudianteId?: string): Promise<{ success: boolean; data: Laboratorio[]; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       let query = supabase.from("laboratorios").select("*, materias(nombre), tareas_laboratorio(*)");
       if (estudianteId) {
         query = query.eq("estudiante_id", estudianteId);
@@ -453,7 +464,7 @@ export async function getLaboratorios(estudianteId?: string): Promise<{ success:
 
   let labsResult = [...MOCK_LABORATORIOS];
   if (estudianteId) {
-    labsResult = labsResult.filter(l => l.estudiante_id === estudianteId);
+    labsResult = labsResult.filter(l => !l.estudiante_id || l.estudiante_id === estudianteId);
   }
   return { success: true, data: labsResult };
 }
@@ -467,6 +478,7 @@ export async function crearLaboratorio(
 
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       // 1. Insertar el laboratorio
       const { data: labData, error: labError } = await supabase
         .from("laboratorios")
@@ -569,6 +581,7 @@ export async function toggleTareaLaboratorio(
 ): Promise<{ success: boolean; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       // 1. Obtener estado actual de la tarea
       const { data: tarea } = await supabase
         .from("tareas_laboratorio")
@@ -612,6 +625,7 @@ export async function cambiarEstadoLaboratorio(
 ): Promise<{ success: boolean; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { error } = await supabase
         .from("laboratorios")
         .update({ estado: nuevoEstado, updated_by: estudianteId })
@@ -632,6 +646,7 @@ export async function cambiarEstadoLaboratorio(
 export async function actualizarLaboratorio(id: string, input: import("./types").ActualizarLaboratorioInput): Promise<{ success: boolean; data?: Laboratorio; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const payload: any = {};
       if (input.titulo) payload.titulo = input.titulo.trim();
       if (input.fecha) payload.fecha = input.fecha;
@@ -662,6 +677,7 @@ export async function actualizarLaboratorio(id: string, input: import("./types")
 export async function eliminarLaboratorio(id: string): Promise<{ success: boolean; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { error } = await supabase.from("laboratorios").delete().eq("id", id);
       if (!error) return { success: true };
       return { success: false, error: error.message };

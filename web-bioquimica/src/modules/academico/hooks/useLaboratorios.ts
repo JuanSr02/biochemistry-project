@@ -14,6 +14,7 @@ export function useLaboratorios() {
   return useQuery({
     queryKey: queryKeys.academico.laboratorios(userId),
     queryFn: () => offlineGetLaboratorios(userId),
+    enabled: !!userId,
     select: (res) => (res.success ? res.data : []),
     staleTime: 5 * 60 * 1000,
   });

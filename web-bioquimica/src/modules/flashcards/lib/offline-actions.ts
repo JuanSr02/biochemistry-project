@@ -14,6 +14,8 @@ import {
   generateOfflineId,
 } from "@/core/lib/indexed-db";
 import { syncManager } from "@/core/lib/sync-manager";
+import { createClient } from "@/core/lib/supabase/client";
+import { isSupabaseConfigured } from "@/core/lib/supabase/utils";
 import type { TarjetaEstudio, CrearFlashcardInput, ActualizarFlashcardInput } from "../types";
 import * as remoteActions from "../actions";
 
@@ -34,18 +36,33 @@ function now(): string {
 export async function offlineGetTarjetas(
   estudianteId?: string
 ): Promise<{ success: boolean; data: TarjetaEstudio[] }> {
-  if (isOnline()) {
+  if (isOnline() && isSupabaseConfigured()) {
     try {
-      const result = await remoteActions.getTarjetasEstudio(estudianteId);
-      if (result.success && result.data.length > 0) {
-        await idbPutTarjetas(result.data);
+      const supabase = createClient();
+      let query = supabase.from("tarjetas_estudio").select("*, materias(nombre)");
+      if (estudianteId) {
+        query = query.eq("estudiante_id", estudianteId);
       }
-      return result;
+      const { data, error } = await query.order("created_at", { ascending: false });
+
+      if (!error && data) {
+        const formatted = data.map((item: any) => ({
+          ...item,
+          materia_nombre: item.materias?.nombre || "Bioquímica General",
+        }));
+        if (formatted.length > 0) {
+          await idbPutTarjetas(formatted as TarjetaEstudio[]);
+        }
+        return { success: true, data: formatted as TarjetaEstudio[] };
+      }
     } catch {
       // fallback IDB
     }
   }
   const data = await idbGetTarjetas(estudianteId);
+  if (data.length === 0 && !isSupabaseConfigured()) {
+    return remoteActions.getTarjetasEstudio(estudianteId);
+  }
   return { success: true, data };
 }
 

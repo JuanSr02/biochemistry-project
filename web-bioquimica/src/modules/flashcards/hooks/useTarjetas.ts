@@ -14,6 +14,7 @@ export function useTarjetas() {
   return useQuery({
     queryKey: queryKeys.flashcards.tarjetas(userId),
     queryFn: () => offlineGetTarjetas(userId),
+    enabled: !!userId,
     select: (res) => (res.success ? res.data : []),
     staleTime: 5 * 60 * 1000,
   });

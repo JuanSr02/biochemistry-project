@@ -17,6 +17,7 @@ export function useMaterias() {
   return useQuery({
     queryKey: queryKeys.academico.materias(userId),
     queryFn: () => offlineGetMaterias(userId),
+    enabled: !!userId,
     select: (res) => (res.success ? res.data : []),
     staleTime: 5 * 60 * 1000,
   });

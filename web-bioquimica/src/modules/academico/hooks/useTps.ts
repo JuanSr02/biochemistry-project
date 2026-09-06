@@ -14,6 +14,7 @@ export function useTps() {
   return useQuery({
     queryKey: queryKeys.academico.tps(userId),
     queryFn: () => offlineGetTps(userId),
+    enabled: !!userId,
     select: (res) => (res.success ? res.data : []),
     staleTime: 5 * 60 * 1000,
   });

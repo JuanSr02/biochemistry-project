@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import { cerrarSesionAccion } from "@/modules/auth/actions";
@@ -19,30 +18,7 @@ export function UserMenu() {
   const router = useRouter();
 
   // ── Zustand: fuente de verdad global del usuario ────────────────────────
-  const { usuario, setUsuario, sidebarOpen, setSidebarOpen, clearUsuario } = useAppStore();
-
-  // Hidratación inicial desde localStorage (una sola vez, en el cliente)
-  useEffect(() => {
-    if (usuario) return; // Ya hidratado
-    try {
-      const guardado = localStorage.getItem("biotools_user");
-      if (guardado) {
-        setUsuario(JSON.parse(guardado));
-      } else {
-        setUsuario({
-          id: "usr-default",
-          email: "luciana@bioquimica.edu.ar",
-          nombre: "Luciana Gómez",
-        });
-      }
-    } catch {
-      setUsuario({
-        id: "usr-default",
-        email: "estudiante@bioquimica.edu.ar",
-        nombre: "Estudiante Bioquímica",
-      });
-    }
-  }, [usuario, setUsuario]);
+  const { usuario, sidebarOpen, setSidebarOpen, clearUsuario } = useAppStore();
 
   const handleCerrarSesion = async () => {
     clearUsuario();

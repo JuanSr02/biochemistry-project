@@ -5,8 +5,8 @@ import { useAppStore } from '@/core/store/useAppStore';
 
 /**
  * useMutation para iniciar sesión.
+ * - Inicia sesión en cliente Supabase Auth para persistir token JWT en localStorage.
  * - Actualiza el store global de Zustand con el usuario autenticado.
- * - Persiste en localStorage para compatibilidad con el sistema de cookies existente.
  * - Redirige al dashboard en caso de éxito.
  */
 export function useLoginMutation() {
@@ -14,10 +14,11 @@ export function useLoginMutation() {
   const setUsuario = useAppStore((s) => s.setUsuario);
 
   return useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string }) =>
-      iniciarSesion(email, password),
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      return iniciarSesion(email, password);
+    },
     onSuccess: (res) => {
-      if (res.success && res.user) {
+      if ("user" in res && res.success && res.user) {
         // 1. Persistir en Zustand (fuente de verdad global del cliente)
         setUsuario(res.user);
         // 2. Persistir en localStorage para compatibilidad con código existente

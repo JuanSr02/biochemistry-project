@@ -24,7 +24,8 @@ import {
   type SyncTable,
 } from "./indexed-db";
 
-import { supabase, isSupabaseConfigured } from "./supabase";
+import { createClient } from "./supabase/client";
+import { isSupabaseConfigured } from "./supabase/utils";
 
 const MAX_RETRIES = 3;
 
@@ -122,6 +123,7 @@ class SyncManager {
       return;
     }
 
+    const supabase = createClient();
     let successCount = 0;
 
     for (const op of queue) {

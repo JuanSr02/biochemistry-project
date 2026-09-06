@@ -1,6 +1,7 @@
 "use server";
 
-import { supabase, isSupabaseConfigured } from "@/core/lib/supabase";
+import { createClient } from "@/core/lib/supabase/server";
+import { isSupabaseConfigured } from "@/core/lib/supabase/utils";
 import { TarjetaEstudio, CrearFlashcardInput, ActualizarFlashcardInput } from "./types";
 import { getMaterias } from "@/modules/academico/actions";
 
@@ -74,6 +75,7 @@ let MOCK_FLASHCARDS: TarjetaEstudio[] = [
 export async function getTarjetasEstudio(estudianteId?: string): Promise<{ success: boolean; data: TarjetaEstudio[] }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       let query = supabase.from("tarjetas_estudio").select("*, materias(nombre)");
       if (estudianteId) {
         query = query.eq("estudiante_id", estudianteId);
@@ -108,6 +110,7 @@ export async function registrarRespuestaFlashcard(
 ): Promise<{ success: boolean; data?: TarjetaEstudio; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { data: actual } = await supabase
         .from("tarjetas_estudio")
         .select("repasos_correctos")
@@ -166,6 +169,7 @@ export async function crearFlashcard(
 
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { data, error } = await supabase
         .from("tarjetas_estudio")
         .insert({
@@ -228,6 +232,7 @@ export async function actualizarFlashcard(
 ): Promise<{ success: boolean; data?: TarjetaEstudio; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const payload: any = {};
       if (input.materia_id !== undefined) payload.materia_id = input.materia_id || null;
       if (input.categoria !== undefined) payload.categoria = input.categoria.trim();
@@ -278,6 +283,7 @@ export async function actualizarFlashcard(
 export async function eliminarFlashcard(id: string): Promise<{ success: boolean; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
+      const supabase = await createClient();
       const { error } = await supabase
         .from("tarjetas_estudio")
         .delete()
