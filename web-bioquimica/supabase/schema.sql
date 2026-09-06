@@ -195,16 +195,109 @@ EXECUTE FUNCTION public.actualizar_updated_at();
 -- ==============================================================================
 -- POLÍTICAS DE SEGURIDAD A NIVEL DE FILA (ROW LEVEL SECURITY - RLS)
 -- ==============================================================================
-ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.materias ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.trabajos_practicos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.laboratorios ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.tareas_laboratorio ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.tarjetas_estudio ENABLE ROW LEVEL SECURITY;
+-- PRINCIPIO: cada usuario sólo puede ver y modificar sus propios datos.
+-- La columna de control es:
+--   - public.usuarios:   id            = auth.uid()  (el id ES el uid de auth)
+--   - todas las demás:  estudiante_id  = auth.uid()
+-- Cada operación (SELECT/INSERT/UPDATE/DELETE) tiene su propia política
+-- explícita para máxima claridad y control.
+-- ==============================================================================
 
-CREATE POLICY "Permitir acceso completo a usuarios autenticados" ON public.usuarios FOR ALL USING (true);
-CREATE POLICY "Permitir acceso completo a materias" ON public.materias FOR ALL USING (true);
-CREATE POLICY "Permitir acceso completo a trabajos_practicos" ON public.trabajos_practicos FOR ALL USING (true);
-CREATE POLICY "Permitir acceso completo a laboratorios" ON public.laboratorios FOR ALL USING (true);
-CREATE POLICY "Permitir acceso completo a tareas_laboratorio" ON public.tareas_laboratorio FOR ALL USING (true);
-CREATE POLICY "Permitir acceso completo a tarjetas_estudio" ON public.tarjetas_estudio FOR ALL USING (true);
+ALTER TABLE public.usuarios           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.materias           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.trabajos_practicos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.laboratorios       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tareas_laboratorio ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tarjetas_estudio   ENABLE ROW LEVEL SECURITY;
+
+-- ------------------------------------------------------------------------------
+-- public.usuarios
+-- ------------------------------------------------------------------------------
+CREATE POLICY "usuarios_select_own" ON public.usuarios
+  FOR SELECT USING (id = auth.uid());
+
+CREATE POLICY "usuarios_insert_own" ON public.usuarios
+  FOR INSERT WITH CHECK (id = auth.uid());
+
+CREATE POLICY "usuarios_update_own" ON public.usuarios
+  FOR UPDATE USING (id = auth.uid()) WITH CHECK (id = auth.uid());
+
+CREATE POLICY "usuarios_delete_own" ON public.usuarios
+  FOR DELETE USING (id = auth.uid());
+
+-- ------------------------------------------------------------------------------
+-- public.materias
+-- ------------------------------------------------------------------------------
+CREATE POLICY "materias_select_own" ON public.materias
+  FOR SELECT USING (estudiante_id = auth.uid());
+
+CREATE POLICY "materias_insert_own" ON public.materias
+  FOR INSERT WITH CHECK (estudiante_id = auth.uid());
+
+CREATE POLICY "materias_update_own" ON public.materias
+  FOR UPDATE USING (estudiante_id = auth.uid()) WITH CHECK (estudiante_id = auth.uid());
+
+CREATE POLICY "materias_delete_own" ON public.materias
+  FOR DELETE USING (estudiante_id = auth.uid());
+
+-- ------------------------------------------------------------------------------
+-- public.trabajos_practicos
+-- ------------------------------------------------------------------------------
+CREATE POLICY "trabajos_practicos_select_own" ON public.trabajos_practicos
+  FOR SELECT USING (estudiante_id = auth.uid());
+
+CREATE POLICY "trabajos_practicos_insert_own" ON public.trabajos_practicos
+  FOR INSERT WITH CHECK (estudiante_id = auth.uid());
+
+CREATE POLICY "trabajos_practicos_update_own" ON public.trabajos_practicos
+  FOR UPDATE USING (estudiante_id = auth.uid()) WITH CHECK (estudiante_id = auth.uid());
+
+CREATE POLICY "trabajos_practicos_delete_own" ON public.trabajos_practicos
+  FOR DELETE USING (estudiante_id = auth.uid());
+
+-- ------------------------------------------------------------------------------
+-- public.laboratorios
+-- ------------------------------------------------------------------------------
+CREATE POLICY "laboratorios_select_own" ON public.laboratorios
+  FOR SELECT USING (estudiante_id = auth.uid());
+
+CREATE POLICY "laboratorios_insert_own" ON public.laboratorios
+  FOR INSERT WITH CHECK (estudiante_id = auth.uid());
+
+CREATE POLICY "laboratorios_update_own" ON public.laboratorios
+  FOR UPDATE USING (estudiante_id = auth.uid()) WITH CHECK (estudiante_id = auth.uid());
+
+CREATE POLICY "laboratorios_delete_own" ON public.laboratorios
+  FOR DELETE USING (estudiante_id = auth.uid());
+
+-- ------------------------------------------------------------------------------
+-- public.tareas_laboratorio
+-- La política en laboratorios ya garantiza que el padre sea del mismo usuario.
+-- El estudiante_id directo agrega una segunda capa de defensa.
+-- ------------------------------------------------------------------------------
+CREATE POLICY "tareas_laboratorio_select_own" ON public.tareas_laboratorio
+  FOR SELECT USING (estudiante_id = auth.uid());
+
+CREATE POLICY "tareas_laboratorio_insert_own" ON public.tareas_laboratorio
+  FOR INSERT WITH CHECK (estudiante_id = auth.uid());
+
+CREATE POLICY "tareas_laboratorio_update_own" ON public.tareas_laboratorio
+  FOR UPDATE USING (estudiante_id = auth.uid()) WITH CHECK (estudiante_id = auth.uid());
+
+CREATE POLICY "tareas_laboratorio_delete_own" ON public.tareas_laboratorio
+  FOR DELETE USING (estudiante_id = auth.uid());
+
+-- ------------------------------------------------------------------------------
+-- public.tarjetas_estudio
+-- ------------------------------------------------------------------------------
+CREATE POLICY "tarjetas_estudio_select_own" ON public.tarjetas_estudio
+  FOR SELECT USING (estudiante_id = auth.uid());
+
+CREATE POLICY "tarjetas_estudio_insert_own" ON public.tarjetas_estudio
+  FOR INSERT WITH CHECK (estudiante_id = auth.uid());
+
+CREATE POLICY "tarjetas_estudio_update_own" ON public.tarjetas_estudio
+  FOR UPDATE USING (estudiante_id = auth.uid()) WITH CHECK (estudiante_id = auth.uid());
+
+CREATE POLICY "tarjetas_estudio_delete_own" ON public.tarjetas_estudio
+  FOR DELETE USING (estudiante_id = auth.uid());
