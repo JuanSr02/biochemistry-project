@@ -11,15 +11,11 @@ import { useTps } from "@/modules/academico/hooks/useTps";
 import { useLaboratorios } from "@/modules/academico/hooks/useLaboratorios";
 
 export default function AcademicoPage() {
-  // ── React Query: los 3 recursos se cargan en paralelo ──────────────────
-  const { data: materias = [], isLoading: loadingMaterias } = useMaterias();
-  const { data: tps = [], isLoading: loadingTps } = useTps();
-  const { data: laboratorios = [], isLoading: loadingLabs } = useLaboratorios();
+  const { data: materias = [], isLoading: loadingMaterias, refetch: refetchMaterias } = useMaterias();
+  const { data: tps = [], isLoading: loadingTps, refetch: refetchTps } = useTps();
+  const { data: laboratorios = [], isLoading: loadingLabs, refetch: refetchLabs } = useLaboratorios();
 
   const loading = loadingMaterias || loadingTps || loadingLabs;
-
-  // Ya no necesitamos onRefresh: las mutations invalidan el caché automáticamente.
-  // Los sub-componentes reciben los datos directamente via props.
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
@@ -63,16 +59,15 @@ export default function AcademicoPage() {
           </TabsList>
 
           <TabsContent value="laboratorios">
-            {/* onRefresh ya no se necesita — las mutations invalidan el caché */}
-            <LaboratoriosLista laboratorios={laboratorios} materias={materias} onRefresh={() => {}} />
+            <LaboratoriosLista laboratorios={laboratorios} materias={materias} onRefresh={refetchLabs} />
           </TabsContent>
 
           <TabsContent value="tps">
-            <TpsLista tps={tps} materias={materias} onRefresh={() => {}} />
+            <TpsLista tps={tps} materias={materias} onRefresh={refetchTps} />
           </TabsContent>
 
           <TabsContent value="materias">
-            <MateriasLista materias={materias} onRefresh={() => {}} />
+            <MateriasLista materias={materias} onRefresh={refetchMaterias} />
           </TabsContent>
         </Tabs>
       )}

@@ -24,7 +24,7 @@ import {
 
 export default function FlashcardsPage() {
   // ── React Query: datos del servidor con caché ──────────────────────────
-  const { data: tarjetas = [], isLoading: loadingTarjetas } = useTarjetas();
+  const { data: tarjetas = [], isLoading: loadingTarjetas, refetch: refetchTarjetas } = useTarjetas();
   const { data: materias = [], isLoading: loadingMaterias } = useMaterias();
   const { responder } = useFlashcardMutations();
 
@@ -210,7 +210,7 @@ export default function FlashcardsPage() {
               <FlashcardsLista
                 tarjetas={tarjetasFiltradas}
                 materias={materias}
-                onUpdate={() => {}}
+                onUpdate={refetchTarjetas}
               />
             </TabsContent>
           </Tabs>

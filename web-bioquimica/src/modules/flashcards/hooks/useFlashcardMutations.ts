@@ -2,15 +2,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/core/api/query-keys';
 import { useAppStore } from '@/core/store/useAppStore';
 import {
-  registrarRespuestaFlashcard,
-  crearFlashcard,
-  actualizarFlashcard,
-  eliminarFlashcard,
-} from '../actions';
+  offlineRegistrarRespuesta,
+  offlineCrearFlashcard,
+  offlineActualizarFlashcard,
+  offlineEliminarFlashcard,
+} from '../lib/offline-actions';
 import type { CrearFlashcardInput, ActualizarFlashcardInput } from '../types';
 
 /**
  * Mutations CRUD + respuesta para el módulo de Flashcards.
+ * - Offline-aware: si no hay red, delega a IndexedDB y encola la operación.
  */
 export function useFlashcardMutations() {
   const queryClient = useQueryClient();
@@ -22,23 +23,23 @@ export function useFlashcardMutations() {
 
   const responderMutation = useMutation({
     mutationFn: ({ id, sabias }: { id: string; sabias: boolean }) =>
-      registrarRespuestaFlashcard(id, sabias),
+      offlineRegistrarRespuesta(id, sabias),
     onSuccess: () => invalidateTarjetas(),
   });
 
   const crearMutation = useMutation({
-    mutationFn: (input: CrearFlashcardInput) => crearFlashcard(input),
+    mutationFn: (input: CrearFlashcardInput) => offlineCrearFlashcard(input),
     onSuccess: () => invalidateTarjetas(),
   });
 
   const actualizarMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: ActualizarFlashcardInput }) =>
-      actualizarFlashcard(id, input),
+      offlineActualizarFlashcard(id, input),
     onSuccess: () => invalidateTarjetas(),
   });
 
   const eliminarMutation = useMutation({
-    mutationFn: (id: string) => eliminarFlashcard(id),
+    mutationFn: (id: string) => offlineEliminarFlashcard(id),
     onSuccess: () => invalidateTarjetas(),
   });
 

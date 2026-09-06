@@ -2,19 +2,19 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/core/api/query-keys';
 import { useAppStore } from '@/core/store/useAppStore';
 import {
-  crearMateria,
-  actualizarMateria,
-  eliminarMateria,
-  crearTrabajoPractico,
-  actualizarTrabajoPractico,
-  cambiarEstadoTP,
-  eliminarTrabajoPractico,
-  crearLaboratorio,
-  actualizarLaboratorio,
-  cambiarEstadoLaboratorio,
-  eliminarLaboratorio,
-  toggleTareaLaboratorio,
-} from '../actions';
+  offlineCrearMateria,
+  offlineActualizarMateria,
+  offlineEliminarMateria,
+  offlineCrearTp,
+  offlineActualizarTp,
+  offlineCambiarEstadoTp,
+  offlineEliminarTp,
+  offlineCrearLaboratorio,
+  offlineActualizarLaboratorio,
+  offlineCambiarEstadoLaboratorio,
+  offlineEliminarLaboratorio,
+  offlineToggleTarea,
+} from '../lib/offline-actions';
 import type {
   CrearMateriaInput,
   CrearTrabajoPracticoInput,
@@ -25,8 +25,9 @@ import type {
 
 /**
  * Mutations CRUD para el módulo académico.
- * Todas las mutations invalidan automáticamente las queries correspondientes
- * para refrescar la UI sin necesidad de `onRefresh` callbacks manuales.
+ * - Offline-aware: si no hay red, delega a IndexedDB y encola la operación.
+ * - Todas las mutations invalidan automáticamente las queries correspondientes
+ *   para refrescar la UI sin necesidad de `onRefresh` callbacks manuales.
  */
 export function useAcademicoMutations() {
   const queryClient = useQueryClient();
@@ -42,21 +43,20 @@ export function useAcademicoMutations() {
 
   // ── MATERIAS ──────────────────────────────────────────────────────────────
   const crearMateriaMutation = useMutation({
-    mutationFn: (input: CrearMateriaInput) => crearMateria(input),
+    mutationFn: (input: CrearMateriaInput) => offlineCrearMateria(input),
     onSuccess: () => invalidateMaterias(),
   });
 
   const actualizarMateriaMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: Partial<CrearMateriaInput> }) =>
-      actualizarMateria(id, input),
+      offlineActualizarMateria(id, input),
     onSuccess: () => invalidateMaterias(),
   });
 
   const eliminarMateriaMutation = useMutation({
-    mutationFn: (id: string) => eliminarMateria(id),
+    mutationFn: (id: string) => offlineEliminarMateria(id),
     onSuccess: () => {
       invalidateMaterias();
-      // Eliminar una materia afecta TPs y Laboratorios
       invalidateTps();
       invalidateLaboratorios();
     },
@@ -64,53 +64,53 @@ export function useAcademicoMutations() {
 
   // ── TRABAJOS PRÁCTICOS ────────────────────────────────────────────────────
   const crearTpMutation = useMutation({
-    mutationFn: (input: CrearTrabajoPracticoInput) => crearTrabajoPractico(input),
+    mutationFn: (input: CrearTrabajoPracticoInput) => offlineCrearTp(input),
     onSuccess: () => invalidateTps(),
   });
 
   const actualizarTpMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: Partial<CrearTrabajoPracticoInput> }) =>
-      actualizarTrabajoPractico(id, input),
+      offlineActualizarTp(id, input),
     onSuccess: () => invalidateTps(),
   });
 
   const cambiarEstadoTpMutation = useMutation({
     mutationFn: ({ id, estado }: { id: string; estado: EstadoTP }) =>
-      cambiarEstadoTP(id, estado, userId),
+      offlineCambiarEstadoTp(id, estado, userId),
     onSuccess: () => invalidateTps(),
   });
 
   const eliminarTpMutation = useMutation({
-    mutationFn: (id: string) => eliminarTrabajoPractico(id),
+    mutationFn: (id: string) => offlineEliminarTp(id),
     onSuccess: () => invalidateTps(),
   });
 
   // ── LABORATORIOS ──────────────────────────────────────────────────────────
   const crearLaboratorioMutation = useMutation({
-    mutationFn: (input: CrearLaboratorioInput) => crearLaboratorio(input),
+    mutationFn: (input: CrearLaboratorioInput) => offlineCrearLaboratorio(input),
     onSuccess: () => invalidateLaboratorios(),
   });
 
   const actualizarLaboratorioMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: Partial<CrearLaboratorioInput> }) =>
-      actualizarLaboratorio(id, input),
+      offlineActualizarLaboratorio(id, input),
     onSuccess: () => invalidateLaboratorios(),
   });
 
   const cambiarEstadoLaboratorioMutation = useMutation({
     mutationFn: ({ id, estado }: { id: string; estado: EstadoLaboratorio }) =>
-      cambiarEstadoLaboratorio(id, estado, userId),
+      offlineCambiarEstadoLaboratorio(id, estado, userId),
     onSuccess: () => invalidateLaboratorios(),
   });
 
   const eliminarLaboratorioMutation = useMutation({
-    mutationFn: (id: string) => eliminarLaboratorio(id),
+    mutationFn: (id: string) => offlineEliminarLaboratorio(id),
     onSuccess: () => invalidateLaboratorios(),
   });
 
   const toggleTareaMutation = useMutation({
     mutationFn: ({ laboratorioId, tareaId }: { laboratorioId: string; tareaId: string }) =>
-      toggleTareaLaboratorio(laboratorioId, tareaId, userId),
+      offlineToggleTarea(laboratorioId, tareaId, userId),
     onSuccess: () => invalidateLaboratorios(),
   });
 

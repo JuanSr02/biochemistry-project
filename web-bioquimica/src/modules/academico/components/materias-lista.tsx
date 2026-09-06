@@ -8,7 +8,11 @@ import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/card";
-import { crearMateria, actualizarMateria, eliminarMateria } from "../actions";
+import {
+  offlineCrearMateria as crearMateria,
+  offlineActualizarMateria as actualizarMateria,
+  offlineEliminarMateria as eliminarMateria
+} from "../lib/offline-actions";
 import { Plus, BookOpen, CheckCircle, Clock, Edit2, Trash2, X } from "lucide-react";
 
 interface MateriasListaProps {

@@ -8,7 +8,12 @@ import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/card";
-import { crearTrabajoPractico, cambiarEstadoTP, actualizarTrabajoPractico, eliminarTrabajoPractico } from "../actions";
+import {
+  offlineCrearTp as crearTrabajoPractico,
+  offlineCambiarEstadoTp as cambiarEstadoTP,
+  offlineActualizarTp as actualizarTrabajoPractico,
+  offlineEliminarTp as eliminarTrabajoPractico
+} from "../lib/offline-actions";
 import { Plus, FileSpreadsheet, Calendar, CheckCircle2, Clock, AlertCircle, Edit2, Trash2, X } from "lucide-react";
 
 interface TpsListaProps {

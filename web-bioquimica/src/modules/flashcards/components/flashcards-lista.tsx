@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { TarjetaEstudio, CrearFlashcardInput, ActualizarFlashcardInput, NivelDificultad } from "../types";
-import { crearFlashcard, actualizarFlashcard, eliminarFlashcard } from "../actions";
+import {
+  offlineCrearFlashcard as crearFlashcard,
+  offlineActualizarFlashcard as actualizarFlashcard,
+  offlineEliminarFlashcard as eliminarFlashcard
+} from "../lib/offline-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/card";
 import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";

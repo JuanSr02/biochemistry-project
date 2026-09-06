@@ -4,6 +4,7 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "@/core/components/theme-provider";
 import { InstallPrompt } from "@/core/components/install-prompt";
 import { QueryProvider } from "@/core/providers/query-provider";
+import { OfflineIndicator } from "@/core/components/offline-indicator";
 import "./globals.css";
 
 // 2. Configuramos la fuente y su variable CSS
@@ -51,6 +52,7 @@ export default function RootLayout({
           >
             {children}
             <InstallPrompt />
+            <OfflineIndicator />
           </ThemeProvider>
         </QueryProvider>
       </body>

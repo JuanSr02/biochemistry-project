@@ -7,7 +7,13 @@ import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/core/components/ui/card";
-import { crearLaboratorio, toggleTareaLaboratorio, cambiarEstadoLaboratorio, actualizarLaboratorio, eliminarLaboratorio } from "../actions";
+import {
+  offlineCrearLaboratorio as crearLaboratorio,
+  offlineToggleTarea as toggleTareaLaboratorio,
+  offlineCambiarEstadoLaboratorio as cambiarEstadoLaboratorio,
+  offlineActualizarLaboratorio as actualizarLaboratorio,
+  offlineEliminarLaboratorio as eliminarLaboratorio
+} from "../lib/offline-actions";
 import { Plus, FlaskConical, Calendar, CheckSquare, Square, Trash2, CheckCircle2, Clock, AlertCircle, Edit2, X } from "lucide-react";
 
 interface LaboratoriosListaProps {
