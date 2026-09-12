@@ -8,7 +8,7 @@ import { Check, X, RotateCw, HelpCircle, Sparkles } from "lucide-react";
 
 interface FlashcardItemProps {
   tarjeta: TarjetaEstudio;
-  onResponder: (sabias: boolean) => void;
+  onResponder: (calidad: number) => void;
 }
 
 export function FlashcardItem({ tarjeta, onResponder }: FlashcardItemProps) {
@@ -25,10 +25,10 @@ export function FlashcardItem({ tarjeta, onResponder }: FlashcardItemProps) {
     }
   };
 
-  const handleRespuesta = (e: React.MouseEvent, sabias: boolean) => {
+  const handleRespuesta = (e: React.MouseEvent, calidad: number) => {
     e.stopPropagation();
     setFlipped(false);
-    onResponder(sabias);
+    onResponder(calidad);
   };
 
   return (
@@ -105,23 +105,43 @@ export function FlashcardItem({ tarjeta, onResponder }: FlashcardItemProps) {
           </div>
 
           {/* Botones de Retroalimentación de Repaso Espaciado */}
-          <div className="pt-4 border-t border-emerald-200/80 dark:border-emerald-900/60 flex gap-3">
+          <div className="pt-4 border-t border-emerald-200/80 dark:border-emerald-900/60 grid grid-cols-4 gap-2">
             <Button
               type="button"
-              onClick={(e) => handleRespuesta(e, false)}
+              onClick={(e) => handleRespuesta(e, 0)}
               variant="destructive"
-              className="flex-1 h-11 text-xs font-semibold rounded-lg shadow-sm"
+              className="h-10 text-[10px] sm:text-xs font-semibold rounded-lg shadow-sm"
+              title="No lo sabía en absoluto"
             >
-              <X className="w-4 h-4 mr-1.5" />
-              No lo sabía
+              <X className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+              Otra vez
             </Button>
             <Button
               type="button"
-              onClick={(e) => handleRespuesta(e, true)}
-              className="flex-1 h-11 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              onClick={(e) => handleRespuesta(e, 3)}
+              variant="outline"
+              className="h-10 text-[10px] sm:text-xs font-semibold rounded-lg shadow-sm border-amber-500 text-amber-600 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-500 dark:hover:bg-amber-950"
+              title="Lo recordé, pero me costó mucho"
             >
-              <Check className="w-4 h-4 mr-1.5" />
-              ¡Lo sabía!
+              Difícil
+            </Button>
+            <Button
+              type="button"
+              onClick={(e) => handleRespuesta(e, 4)}
+              className="h-10 text-[10px] sm:text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              title="Lo recordé sin mayor problema"
+            >
+              <Check className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+              Bien
+            </Button>
+            <Button
+              type="button"
+              onClick={(e) => handleRespuesta(e, 5)}
+              className="h-10 text-[10px] sm:text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+              title="Muy fácil de recordar"
+            >
+              <Sparkles className="w-3.5 h-3.5 mr-1 hidden sm:inline" />
+              Fácil
             </Button>
           </div>
         </div>

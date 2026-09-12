@@ -16,6 +16,9 @@ let MOCK_FLASHCARDS: TarjetaEstudio[] = [
     nivel_dificultad: "media",
     estado_repaso: "repasando",
     repasos_correctos: 2,
+    sm2_intervalo: 0,
+    sm2_facilidad: 2.5,
+    sm2_repeticiones: 0,
     proximo_repaso: new Date().toISOString().split("T")[0],
     created_at: new Date().toISOString(),
     created_by: "00000000-0000-0000-0000-000000000001",
@@ -32,6 +35,9 @@ let MOCK_FLASHCARDS: TarjetaEstudio[] = [
     nivel_dificultad: "facil",
     estado_repaso: "dominado",
     repasos_correctos: 5,
+    sm2_intervalo: 0,
+    sm2_facilidad: 2.5,
+    sm2_repeticiones: 0,
     proximo_repaso: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     created_at: new Date().toISOString(),
     created_by: "00000000-0000-0000-0000-000000000001",
@@ -48,6 +54,9 @@ let MOCK_FLASHCARDS: TarjetaEstudio[] = [
     nivel_dificultad: "dificil",
     estado_repaso: "nuevo",
     repasos_correctos: 0,
+    sm2_intervalo: 0,
+    sm2_facilidad: 2.5,
+    sm2_repeticiones: 0,
     proximo_repaso: new Date().toISOString().split("T")[0],
     created_at: new Date().toISOString(),
     created_by: "00000000-0000-0000-0000-000000000001",
@@ -64,6 +73,9 @@ let MOCK_FLASHCARDS: TarjetaEstudio[] = [
     nivel_dificultad: "media",
     estado_repaso: "repasando",
     repasos_correctos: 1,
+    sm2_intervalo: 0,
+    sm2_facilidad: 2.5,
+    sm2_repeticiones: 0,
     proximo_repaso: new Date().toISOString().split("T")[0],
     created_at: new Date().toISOString(),
     created_by: "00000000-0000-0000-0000-000000000001",
@@ -106,26 +118,50 @@ export async function getTarjetasEstudio(estudianteId?: string): Promise<{ succe
 
 export async function registrarRespuestaFlashcard(
   id: string,
-  sabias: boolean
+  calidad: number
 ): Promise<{ success: boolean; data?: TarjetaEstudio; error?: string }> {
   if (isSupabaseConfigured()) {
     try {
       const supabase = await createClient();
       const { data: actual } = await supabase
         .from("tarjetas_estudio")
-        .select("repasos_correctos")
+        .select("repasos_correctos, sm2_intervalo, sm2_facilidad, sm2_repeticiones")
         .eq("id", id)
         .single();
 
+      let facilidad = actual?.sm2_facilidad ?? 2.5;
+      let repeticiones = actual?.sm2_repeticiones ?? 0;
+      let intervalo = actual?.sm2_intervalo ?? 0;
+
+      if (calidad >= 3) {
+        if (repeticiones === 0) intervalo = 1;
+        else if (repeticiones === 1) intervalo = 6;
+        else intervalo = Math.round(intervalo * facilidad);
+        repeticiones += 1;
+      } else {
+        repeticiones = 0;
+        intervalo = 1;
+      }
+
+      facilidad = facilidad + (0.1 - (5 - calidad) * (0.08 + (5 - calidad) * 0.02));
+      if (facilidad < 1.3) facilidad = 1.3;
+
       const repasosPrevios = actual?.repasos_correctos || 0;
-      const nuevosRepasos = sabias ? repasosPrevios + 1 : 0;
-      const nuevoEstado = sabias ? (nuevosRepasos >= 3 ? "dominado" : "repasando") : "repasando";
+      const nuevosRepasos = calidad >= 3 ? repasosPrevios + 1 : 0;
+      const nuevoEstado = calidad >= 3 ? (repeticiones >= 3 ? "dominado" : "repasando") : "repasando";
+      
+      const proximo_repaso = new Date();
+      proximo_repaso.setDate(proximo_repaso.getDate() + intervalo);
 
       const { data: updated, error } = await supabase
         .from("tarjetas_estudio")
         .update({
           repasos_correctos: nuevosRepasos,
           estado_repaso: nuevoEstado,
+          sm2_intervalo: intervalo,
+          sm2_facilidad: facilidad,
+          sm2_repeticiones: repeticiones,
+          proximo_repaso: proximo_repaso.toISOString().split("T")[0],
         })
         .eq("id", id)
         .select("*, materias(nombre)")
@@ -147,13 +183,32 @@ export async function registrarRespuestaFlashcard(
   const card = MOCK_FLASHCARDS.find((c) => c.id === id);
   if (!card) return { success: false, error: "Tarjeta no encontrada." };
 
-  if (sabias) {
+  if (calidad >= 3) {
+    if (card.sm2_repeticiones === 0) card.sm2_intervalo = 1;
+    else if (card.sm2_repeticiones === 1) card.sm2_intervalo = 6;
+    else card.sm2_intervalo = Math.round((card.sm2_intervalo || 1) * (card.sm2_facilidad || 2.5));
+    card.sm2_repeticiones = (card.sm2_repeticiones || 0) + 1;
+  } else {
+    card.sm2_repeticiones = 0;
+    card.sm2_intervalo = 1;
+  }
+
+  let facilidad = card.sm2_facilidad || 2.5;
+  facilidad = facilidad + (0.1 - (5 - calidad) * (0.08 + (5 - calidad) * 0.02));
+  if (facilidad < 1.3) facilidad = 1.3;
+  card.sm2_facilidad = facilidad;
+
+  if (calidad >= 3) {
     card.repasos_correctos += 1;
-    card.estado_repaso = card.repasos_correctos >= 3 ? "dominado" : "repasando";
+    card.estado_repaso = card.sm2_repeticiones >= 3 ? "dominado" : "repasando";
   } else {
     card.repasos_correctos = 0;
     card.estado_repaso = "repasando";
   }
+  
+  const pRepaso = new Date();
+  pRepaso.setDate(pRepaso.getDate() + card.sm2_intervalo);
+  card.proximo_repaso = pRepaso.toISOString().split("T")[0];
 
   card.updated_at = new Date().toISOString();
 
@@ -180,6 +235,9 @@ export async function crearFlashcard(
           nivel_dificultad: input.nivel_dificultad,
           estado_repaso: "nuevo",
           repasos_correctos: 0,
+          sm2_intervalo: 0,
+          sm2_facilidad: 2.5,
+          sm2_repeticiones: 0,
           estudiante_id: input.estudiante_id,
         })
         .select("*, materias(nombre)")
@@ -215,6 +273,9 @@ export async function crearFlashcard(
     nivel_dificultad: input.nivel_dificultad,
     estado_repaso: "nuevo",
     repasos_correctos: 0,
+    sm2_intervalo: 0,
+    sm2_facilidad: 2.5,
+    sm2_repeticiones: 0,
     estudiante_id: input.estudiante_id,
     created_at: new Date().toISOString(),
     created_by: input.estudiante_id || "00000000-0000-0000-0000-000000000001",
