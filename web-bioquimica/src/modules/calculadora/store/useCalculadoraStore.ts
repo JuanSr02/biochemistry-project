@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { SolucionSolidaResultado, DilucionResultado } from '../types';
 
 interface HistorialEntry {
@@ -25,25 +26,33 @@ interface CalculadoraState {
   clearHistorial: () => void;
 }
 
-export const useCalculadoraStore = create<CalculadoraState>((set) => ({
-  modoAvanzado: false,
-  ultimoResultadoSolida: null,
-  ultimoResultadoDilucion: null,
-  historial: [],
+export const useCalculadoraStore = create<CalculadoraState>()(
+  persist(
+    (set) => ({
+      modoAvanzado: false,
+      ultimoResultadoSolida: null,
+      ultimoResultadoDilucion: null,
+      historial: [],
 
-  toggleModoAvanzado: () => set((state) => ({ modoAvanzado: !state.modoAvanzado })),
+      toggleModoAvanzado: () => set((state) => ({ modoAvanzado: !state.modoAvanzado })),
 
-  setResultadoSolida: (resultado) => set({ ultimoResultadoSolida: resultado }),
+      setResultadoSolida: (resultado) => set({ ultimoResultadoSolida: resultado }),
 
-  setResultadoDilucion: (resultado) => set({ ultimoResultadoDilucion: resultado }),
+      setResultadoDilucion: (resultado) => set({ ultimoResultadoDilucion: resultado }),
 
-  addToHistorial: (entry) =>
-    set((state) => ({
-      historial: [
-        { ...entry, id: `calc-${Date.now()}`, timestamp: Date.now() },
-        ...state.historial,
-      ].slice(0, 20), // Máximo 20 entradas
-    })),
+      addToHistorial: (entry) =>
+        set((state) => ({
+          historial: [
+            { ...entry, id: `calc-${Date.now()}`, timestamp: Date.now() },
+            ...state.historial,
+          ].slice(0, 20), // Máximo 20 entradas
+        })),
 
-  clearHistorial: () => set({ historial: [] }),
-}));
+      clearHistorial: () => set({ historial: [] }),
+    }),
+    {
+      name: 'calculadora-historial',
+      partialize: (state) => ({ historial: state.historial }),
+    }
+  )
+);

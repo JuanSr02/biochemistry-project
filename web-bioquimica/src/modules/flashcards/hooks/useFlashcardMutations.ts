@@ -22,8 +22,8 @@ export function useFlashcardMutations() {
     queryClient.invalidateQueries({ queryKey: queryKeys.flashcards.tarjetas(userId) });
 
   const responderMutation = useMutation({
-    mutationFn: ({ id, sabias }: { id: string; sabias: boolean }) =>
-      offlineRegistrarRespuesta(id, sabias),
+    mutationFn: ({ id, calidad }: { id: string; calidad: number }) =>
+      offlineRegistrarRespuesta(id, calidad),
     onSuccess: () => invalidateTarjetas(),
   });
 

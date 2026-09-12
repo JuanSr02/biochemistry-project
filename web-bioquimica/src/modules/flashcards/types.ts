@@ -11,6 +11,9 @@ export interface TarjetaEstudio {
   nivel_dificultad: NivelDificultad;
   estado_repaso: EstadoRepaso;
   repasos_correctos: number;
+  sm2_intervalo?: number;
+  sm2_facilidad?: number;
+  sm2_repeticiones?: number;
   proximo_repaso?: string;
   created_at: string;
   created_by: string;

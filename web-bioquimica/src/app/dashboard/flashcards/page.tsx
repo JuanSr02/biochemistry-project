@@ -47,15 +47,15 @@ export default function FlashcardsPage() {
     mazoActivo === "todas" ? tarjetas : tarjetas.filter((t) => t.materia_id === mazoActivo);
   const tarjetaActual = tarjetasFiltradas[indexActual];
 
-  const handleResponder = async (sabias: boolean) => {
+  const handleResponder = async (calidad: number) => {
     if (!tarjetaActual) return;
 
     // 1. Registrar en Zustand (actualización inmediata de la UI)
-    if (sabias) registrarAcierto();
+    if (calidad >= 3) registrarAcierto();
     else registrarError();
 
     // 2. Persistir en el servidor via useMutation (invalida caché automáticamente)
-    responder.mutate({ id: tarjetaActual.id, sabias });
+    responder.mutate({ id: tarjetaActual.id, calidad });
 
     // 3. Avanzar a la siguiente tarjeta
     avanzarTarjeta(tarjetasFiltradas.length);

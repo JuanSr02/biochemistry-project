@@ -128,6 +128,9 @@ CREATE TABLE IF NOT EXISTS public.tarjetas_estudio (
     nivel_dificultad VARCHAR(50) DEFAULT 'media' NOT NULL CHECK (nivel_dificultad IN ('facil', 'media', 'dificil')),
     estado_repaso VARCHAR(50) DEFAULT 'nuevo' NOT NULL CHECK (estado_repaso IN ('nuevo', 'repasando', 'dominado')),
     repasos_correctos INT DEFAULT 0 NOT NULL,
+    sm2_intervalo INT DEFAULT 0 NOT NULL,
+    sm2_facilidad NUMERIC(5, 3) DEFAULT 2.5 NOT NULL,
+    sm2_repeticiones INT DEFAULT 0 NOT NULL,
     proximo_repaso DATE,
     estudiante_id UUID NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
     
